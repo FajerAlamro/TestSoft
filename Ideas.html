@@ -343,65 +343,77 @@ function confirmLogout() {
     </div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
-        import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
-        
-        // إعداد Firebase
-        const firebaseConfig = {
-            apiKey: "AIzaSyC68KD9M_rGGOoyfQaW925LT8ipoj9jE44",
-            authDomain: "wasl-523b4.firebaseapp.com",
-            databaseURL: "https://wasl-523b4-default-rtdb.firebaseio.com",
-            projectId: "wasl-523b4",
-            storageBucket: "wasl-523b4.firebasestorage.app",
-            messagingSenderId: "410509570015",
-            appId: "1:410509570015:web:4c9a86048b3e8be0bd1e6a",
-            measurementId: "G-DD60XW5EVT"
-        };
-        
-        // تهيئة التطبيق
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-    
-        // Function to fetch ideas and display them
-        async function fetchIdeas() {
-            const ideasCollection = collection(db, "ideas");
-            const querySnapshot = await getDocs(ideasCollection);
-            const creatorMessage = document.querySelector(".creator");
-    
-            if (querySnapshot.empty) {
-                // إذا كانت قاعدة البيانات فارغة، عرض الرسالة
-                creatorMessage.style.display = "block";
-            } else {
-                // إذا كانت هناك أفكار، عرضها في الصفحة
-                creatorMessage.style.display = "none"; // إخفاء الرسالة
-    
-                querySnapshot.forEach((doc) => {
-                    const ideaData = doc.data();
-                    const ideaElement = document.createElement("div");
-                    ideaElement.classList.add("idea-card");
-                    
-                    ideaElement.innerHTML = `
-                        <div class="profile">
-                            <a href="account1.html" class="profile-link" onclick="event.stopPropagation();">
-                                <img src="${ideaData.userProfilePic}" alt="${ideaData.creatorName}">
-                            </a>
-                            <p class="creator">${ideaData.creatorName}</p>
-                        </div>
-                        <div class="idea-content">
-                            <p><strong>${ideaData.ideaTitle}</strong></p>
-                            <p>مجال الفكرة: ${ideaData.ideaField}</p>
-                            <p>${ideaData.timestamp}</p>
-                        </div>
-                    `;
-                    document.querySelector("main").appendChild(ideaElement);
-                });
-            }
-        }
-    
-        // Call fetchIdeas when the page loads
-        window.onload = function() {
-            fetchIdeas();
-        };
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
+import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
+
+// إعداد Firebase
+const firebaseConfig = {
+    apiKey: "AIzaSyC68KD9M_rGGOoyfQaW925LT8ipoj9jE44",
+    authDomain: "wasl-523b4.firebaseapp.com",
+    databaseURL: "https://wasl-523b4-default-rtdb.firebaseio.com",
+    projectId: "wasl-523b4",
+    storageBucket: "wasl-523b4.firebasestorage.app",
+    messagingSenderId: "410509570015",
+    appId: "1:410509570015:web:4c9a86048b3e8be0bd1e6a",
+    measurementId: "G-DD60XW5EVT"
+};
+
+// تهيئة التطبيق
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// جلب الأفكار وعرضها
+async function fetchIdeas() {
+    const ideasCollection = collection(db, "ideas");
+    const querySnapshot = await getDocs(ideasCollection);
+    const creatorMessage = document.querySelector(".creator");
+    const mainContainer = document.querySelector("main");
+
+    // إزالة جميع الأفكار القديمة قبل التحديث
+    document.querySelectorAll(".idea-card").forEach(card => card.remove());
+
+    if (querySnapshot.empty) {
+        // إذا لم تكن هناك أفكار، عرض الرسالة
+        creatorMessage.style.display = "block";
+    } else {
+        creatorMessage.style.display = "none"; // إخفاء الرسالة
+
+        querySnapshot.forEach((doc) => {
+            const ideaData = doc.data();
+            
+            // التحقق من أن الحقول ليست undefined أو فارغة
+            const creatorName = ideaData.creatorName || "مستخدم غير معروف";
+            const ideaTitle = ideaData.ideaTitle || "عنوان غير متوفر";
+            const ideaField = ideaData.ideaField || "مجال غير محدد";
+            const timestamp = ideaData.timestamp || "تاريخ غير متاح";
+            const userProfilePic = ideaData.userProfilePic || "images/default-profile.png";
+
+            const ideaElement = document.createElement("div");
+            ideaElement.classList.add("idea-card");
+
+            ideaElement.innerHTML = `
+                <div class="profile">
+                    <a href="account1.html" class="profile-link" onclick="event.stopPropagation();">
+                        <img src="${userProfilePic}" alt="${creatorName}">
+                    </a>
+                    <p class="creator">${creatorName}</p>
+                </div>
+                <div class="idea-content">
+                    <p><strong>${ideaTitle}</strong></p>
+                    <p>مجال الفكرة: ${ideaField}</p>
+                    <p>${timestamp}</p>
+                </div>
+            `;
+
+            // إضافة الفكرة إلى الصفحة
+            mainContainer.appendChild(ideaElement);
+        });
+    }
+}
+
+// استدعاء الوظيفة عند تحميل الصفحة
+window.onload = fetchIdeas;
+
     </script>
     
 
