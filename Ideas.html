@@ -323,6 +323,12 @@ function confirmLogout() {
 
     <main>
         <h1>تصّفح الأفكار</h1>
+
+        <!-- رسالة تظهر فقط إذا لم تكن هناك أفكار -->
+        <p id="no-ideas-message" class="creator" style="display: none; text-align: center;">لا توجد أفكار حالياً.</p>
+
+        <!-- سيتم إضافة الكروت هنا بواسطة JavaScript -->
+        <div id="ideas-container"></div>
     </main>
     
 
@@ -340,15 +346,14 @@ function confirmLogout() {
 
     <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
-import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
+import { getFirestore, collection, getDocs, onSnapshot } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
 
 // إعداد Firebase
 const firebaseConfig = {
     apiKey: "AIzaSyC68KD9M_rGGOoyfQaW925LT8ipoj9jE44",
     authDomain: "wasl-523b4.firebaseapp.com",
-    databaseURL: "https://wasl-523b4-default-rtdb.firebaseio.com",
     projectId: "wasl-523b4",
-    storageBucket: "wasl-523b4.firebasestorage.app",
+    storageBucket: "wasl-523b4.appspot.com",
     messagingSenderId: "410509570015",
     appId: "1:410509570015:web:4c9a86048b3e8be0bd1e6a",
     measurementId: "G-DD60XW5EVT"
@@ -358,59 +363,53 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// جلب الأفكار وعرضها
-async function fetchIdeas() {
-    const ideasCollection = collection(db, "ideas");
-    const querySnapshot = await getDocs(ideasCollection);
-    const mainContainer = document.querySelector("main");
-    const ideaCard = document.querySelector(".idea-card");
-    const creatorMessage = ideaCard.querySelector(".creator");
+const ideasContainer = document.getElementById("ideas-container");
+const noIdeasMessage = document.getElementById("no-ideas-message");
 
-    // إزالة جميع الأفكار السابقة قبل التحديث
-    document.querySelectorAll(".idea-card:not(:first-child)").forEach(card => card.remove());
+// دالة لجلب الأفكار وتحديث الصفحة تلقائيًا
+function fetchIdeas() {
+    onSnapshot(collection(db, "ideas"), (snapshot) => {
+        ideasContainer.innerHTML = ""; // مسح المحتوى الحالي
+        if (snapshot.empty) {
+            noIdeasMessage.style.display = "block"; // إظهار رسالة عدم وجود أفكار
+        } else {
+            noIdeasMessage.style.display = "none"; // إخفاء الرسالة
 
-    if (querySnapshot.empty) {
-        // إذا لم تكن هناك أفكار، إظهار الرسالة
-        creatorMessage.style.display = "block";
-    } else {
-        creatorMessage.style.display = "none"; // إخفاء الرسالة
+            snapshot.forEach((doc) => {
+                const idea = doc.data();
+                const ideaCard = document.createElement("div");
+                ideaCard.classList.add("idea-card");
 
-        querySnapshot.forEach((doc) => {
-            const ideaData = doc.data();
-            
-            // التحقق من البيانات قبل عرضها
-            const creatorName = ideaData.creatorName || "مستخدم غير معروف";
-            const ideaTitle = ideaData.ideaTitle || "عنوان غير متوفر";
-            const ideaField = ideaData.ideaField || "مجال غير محدد";
-            const timestamp = ideaData.timestamp || "تاريخ غير متاح";
-            const userProfilePic = ideaData.userProfilePic || "images/default-profile.png";
+                // البيانات مع التحقق من وجودها لتجنب الأخطاء
+                const creatorName = idea.creatorName || "مستخدم غير معروف";
+                const ideaTitle = idea.ideaTitle || "عنوان غير متوفر";
+                const ideaField = idea.ideaField || "مجال غير محدد";
+                const timestamp = idea.timestamp || "تاريخ غير متاح";
+                const userProfilePic = idea.userProfilePic || "images/default-profile.png";
 
-            // إنشاء كارد جديد
-            const ideaElement = document.createElement("div");
-            ideaElement.classList.add("idea-card");
+                ideaCard.innerHTML = `
+                    <div class="profile">
+                        <a href="account1.html" class="profile-link" onclick="event.stopPropagation();">
+                            <img src="${userProfilePic}" alt="${creatorName}">
+                        </a>
+                        <p class="creator">${creatorName}</p>
+                    </div>
+                    <div class="idea-content">
+                        <p><strong>${ideaTitle}</strong></p>
+                        <p>مجال الفكرة: ${ideaField}</p>
+                        <p>${timestamp}</p>
+                    </div>
+                `;
 
-            ideaElement.innerHTML = `
-                <div class="profile">
-                    <a href="account1.html" class="profile-link" onclick="event.stopPropagation();">
-                        <img src="${userProfilePic}" alt="${creatorName}">
-                    </a>
-                    <p class="creator">${creatorName}</p>
-                </div>
-                <div class="idea-content">
-                    <p><strong>${ideaTitle}</strong></p>
-                    <p>مجال الفكرة: ${ideaField}</p>
-                    <p>${timestamp}</p>
-                </div>
-            `;
-
-            // إضافة الفكرة إلى الصفحة
-            mainContainer.appendChild(ideaElement);
-        });
-    }
+                ideasContainer.appendChild(ideaCard); // إضافة الكارد إلى الصفحة
+            });
+        }
+    });
 }
 
-// استدعاء الوظيفة عند تحميل الصفحة
-window.onload = fetchIdeas;
+// تشغيل الدالة عند تحميل الصفحة
+fetchIdeas();
+
 
 
     </script>
