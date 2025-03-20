@@ -366,14 +366,15 @@ const db = getFirestore(app);
 async function fetchIdeas() {
     const ideasCollection = collection(db, "ideas");
     const querySnapshot = await getDocs(ideasCollection);
-    const creatorMessage = document.querySelector(".creator");
     const mainContainer = document.querySelector("main");
+    const ideaCard = document.querySelector(".idea-card");
+    const creatorMessage = ideaCard.querySelector(".creator");
 
-    // إزالة جميع الأفكار القديمة قبل التحديث
-    document.querySelectorAll(".idea-card").forEach(card => card.remove());
+    // إزالة جميع الأفكار السابقة قبل التحديث
+    document.querySelectorAll(".idea-card:not(:first-child)").forEach(card => card.remove());
 
     if (querySnapshot.empty) {
-        // إذا لم تكن هناك أفكار، عرض الرسالة
+        // إذا لم تكن هناك أفكار، إظهار الرسالة
         creatorMessage.style.display = "block";
     } else {
         creatorMessage.style.display = "none"; // إخفاء الرسالة
@@ -381,13 +382,14 @@ async function fetchIdeas() {
         querySnapshot.forEach((doc) => {
             const ideaData = doc.data();
             
-            // التحقق من أن الحقول ليست undefined أو فارغة
+            // التحقق من البيانات قبل عرضها
             const creatorName = ideaData.creatorName || "مستخدم غير معروف";
             const ideaTitle = ideaData.ideaTitle || "عنوان غير متوفر";
             const ideaField = ideaData.ideaField || "مجال غير محدد";
             const timestamp = ideaData.timestamp || "تاريخ غير متاح";
             const userProfilePic = ideaData.userProfilePic || "images/default-profile.png";
 
+            // إنشاء كارد جديد
             const ideaElement = document.createElement("div");
             ideaElement.classList.add("idea-card");
 
@@ -413,6 +415,7 @@ async function fetchIdeas() {
 
 // استدعاء الوظيفة عند تحميل الصفحة
 window.onload = fetchIdeas;
+
 
     </script>
     
