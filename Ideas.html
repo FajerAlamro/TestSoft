@@ -324,10 +324,10 @@ function confirmLogout() {
     <main>
         <h1>تصّفح الأفكار</h1>
 
-        <!-- رسالة تظهر فقط إذا لم تكن هناك أفكار -->
-        <p id="no-ideas-message" class="creator" style="display: none; text-align: center;">لا توجد أفكار حالياً.</p>
+        <!-- رسالة في حالة عدم وجود أفكار -->
+        <p id="no-ideas-message" class="creator" style="text-align: center;">لا توجد أفكار حالياً.</p>
 
-        <!-- سيتم إضافة الكروت هنا بواسطة JavaScript -->
+        <!-- الحاوية التي ستتم إضافة الأفكار إليها -->
         <div id="ideas-container"></div>
     </main>
     
@@ -346,7 +346,7 @@ function confirmLogout() {
 
     <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
-import { getFirestore, collection, getDocs, onSnapshot } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
+import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
 
 // إعداد Firebase
 const firebaseConfig = {
@@ -366,51 +366,45 @@ const db = getFirestore(app);
 const ideasContainer = document.getElementById("ideas-container");
 const noIdeasMessage = document.getElementById("no-ideas-message");
 
-// دالة لجلب الأفكار وتحديث الصفحة تلقائيًا
-function fetchIdeas() {
-    onSnapshot(collection(db, "ideas"), (snapshot) => {
-        ideasContainer.innerHTML = ""; // مسح المحتوى الحالي
-        if (snapshot.empty) {
-            noIdeasMessage.style.display = "block"; // إظهار رسالة عدم وجود أفكار
-        } else {
-            noIdeasMessage.style.display = "none"; // إخفاء الرسالة
+// مراقبة قاعدة البيانات والتحديث تلقائيًا
+onSnapshot(collection(db, "ideas"), (snapshot) => {
+    ideasContainer.innerHTML = ""; // مسح أي بيانات قديمة
 
-            snapshot.forEach((doc) => {
-                const idea = doc.data();
-                const ideaCard = document.createElement("div");
-                ideaCard.classList.add("idea-card");
+    if (snapshot.empty) {
+        noIdeasMessage.style.display = "block"; // عرض الرسالة
+    } else {
+        noIdeasMessage.style.display = "none"; // إخفاء الرسالة
 
-                // البيانات مع التحقق من وجودها لتجنب الأخطاء
-                const creatorName = idea.creatorName || "مستخدم غير معروف";
-                const ideaTitle = idea.ideaTitle || "عنوان غير متوفر";
-                const ideaField = idea.ideaField || "مجال غير محدد";
-                const timestamp = idea.timestamp || "تاريخ غير متاح";
-                const userProfilePic = idea.userProfilePic || "images/default-profile.png";
+        snapshot.forEach((doc) => {
+            const idea = doc.data();
+            const ideaCard = document.createElement("div");
+            ideaCard.classList.add("idea-card");
 
-                ideaCard.innerHTML = `
-                    <div class="profile">
-                        <a href="account1.html" class="profile-link" onclick="event.stopPropagation();">
-                            <img src="${userProfilePic}" alt="${creatorName}">
-                        </a>
-                        <p class="creator">${creatorName}</p>
-                    </div>
-                    <div class="idea-content">
-                        <p><strong>${ideaTitle}</strong></p>
-                        <p>مجال الفكرة: ${ideaField}</p>
-                        <p>${timestamp}</p>
-                    </div>
-                `;
+            // التحقق من البيانات قبل العرض
+            const creatorName = idea.creatorName || "مستخدم غير معروف";
+            const ideaTitle = idea.ideaTitle || "عنوان غير متوفر";
+            const ideaField = idea.ideaField || "مجال غير محدد";
+            const timestamp = idea.timestamp || "تاريخ غير متاح";
+            const userProfilePic = idea.userProfilePic || "images/default-profile.png";
 
-                ideasContainer.appendChild(ideaCard); // إضافة الكارد إلى الصفحة
-            });
-        }
-    });
-}
+            ideaCard.innerHTML = `
+                <div class="profile">
+                    <a href="account1.html" class="profile-link" onclick="event.stopPropagation();">
+                        <img src="${userProfilePic}" alt="${creatorName}">
+                    </a>
+                    <p class="creator">${creatorName}</p>
+                </div>
+                <div class="idea-content">
+                    <p><strong>${ideaTitle}</strong></p>
+                    <p>مجال الفكرة: ${ideaField}</p>
+                    <p>${timestamp}</p>
+                </div>
+            `;
 
-// تشغيل الدالة عند تحميل الصفحة
-fetchIdeas();
-
-
+            ideasContainer.appendChild(ideaCard); // إضافة الكارد
+        });
+    }
+});
 
     </script>
     
