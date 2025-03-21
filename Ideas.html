@@ -451,6 +451,43 @@ searchInput.addEventListener('input', function() {
     });
 });
 
+// دالة لتنسيق التاريخ بتنسيق IEEE/شهر/يوم
+function formatDateIEEE(timestamp) {
+    if (!timestamp) return "";
+    
+    // تحويل الطابع الزمني إلى كائن تاريخ
+    let date;
+    if (typeof timestamp === 'string') {
+        // إذا كان الطابع الزمني هو سلسلة نصية، حاول تحويله
+        if (timestamp.includes('T') || timestamp.includes('-')) {
+            // ISO format: "2023-03-29T12:34:56" or "2023-03-29"
+            date = new Date(timestamp);
+        } else if (!isNaN(timestamp)) {
+            // Unix timestamp as string
+            date = new Date(parseInt(timestamp));
+        } else {
+            return timestamp; // إرجاع النص الأصلي إذا كان بتنسيق غير معروف
+        }
+    } else if (typeof timestamp === 'number') {
+        // Unix timestamp as number
+        date = new Date(timestamp);
+    } else {
+        return ""; // إرجاع فارغ إذا كان بتنسيق غير معروف
+    }
+    
+    // التحقق من صلاحية التاريخ
+    if (isNaN(date.getTime())) {
+        return timestamp; // إرجاع النص الأصلي إذا كان التاريخ غير صالح
+    }
+    
+    // الحصول على اليوم والشهر
+    const day = date.getDate();
+    const month = date.getMonth() + 1; // الشهور تبدأ من 0، لذا نضيف 1
+    
+    // تنسيق النص النهائي
+    return `IEEE/${month}/${day}`;
+}
+
 // مراقبة قاعدة البيانات والتحديث تلقائيًا - استخدام Realtime Database
 const ideasRef = ref(db, 'ideas');
 onValue(ideasRef, (snapshot) => {
@@ -492,7 +529,10 @@ onValue(ideasRef, (snapshot) => {
         const creatorName = idea.username || "مستخدم مجهول";
         const ideaTitle = idea.title || "بدون عنوان";
         const ideaField = idea.domain || "غير محدد";
-        const timestamp = idea.timestamp || "";
+        
+        // تنسيق التاريخ بالشكل المطلوب
+        const formattedDate = formatDateIEEE(idea.timestamp);
+        
         // لا توجد صورة ملف شخصي في البيانات، لذا استخدم صورة افتراضية
         const userProfilePic = "images/default-profile.png"; // استخدام الصورة الافتراضية دائمًا
 
@@ -506,7 +546,7 @@ onValue(ideasRef, (snapshot) => {
             <div class="idea-content">
                 <p><strong>${ideaTitle}</strong></p>
                 <p>مجال الفكرة: ${ideaField}</p>
-                <p>${timestamp}</p>
+                <p>${formattedDate}</p>
             </div>
         `;
 
