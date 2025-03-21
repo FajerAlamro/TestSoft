@@ -409,126 +409,177 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
-        import { getDatabase, ref, push, set, update } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
-        
-        // 🔥 1. إعداد Firebase
-        const firebaseConfig = {
-          apiKey: "AIzaSyC68KD9M_rGGOoyfQaW925LT8ipoj9jE44",
-          authDomain: "wasl-523b4.firebaseapp.com",
-          databaseURL: "https://wasl-523b4-default-rtdb.firebaseio.com",
-          projectId: "wasl-523b4",
-          storageBucket: "wasl-523b4.firebasestorage.app",
-          messagingSenderId: "410509570015",
-          appId: "1:410509570015:web:4c9a86048b3e8be0bd1e6a",
-          measurementId: "G-DD60XW5EVT"
-        };
-        
-        // ✅ 2. تهيئة Firebase
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-        const auth = getAuth(app);
-                
+// Choose ONE database type:
+// For Firestore:
+import { getFirestore, collection, onSnapshot, doc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+// OR for Realtime Database (comment out the one you don't use):
+// import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
 
-    // استخدام العناصر الموجودة بالفعل في HTML
-    const ideasContainer = document.getElementById("ideas-container");
-    const noIdeasMessage = document.getElementById("no-ideas-message");
-    const searchInput = document.getElementById("searchInput");
+// 🔥 1. إعداد Firebase
+const firebaseConfig = {
+  apiKey: "AIzaSyC68KD9M_rGGOoyfQaW925LT8ipoj9jE44",
+  authDomain: "wasl-523b4.firebaseapp.com",
+  databaseURL: "https://wasl-523b4-default-rtdb.firebaseio.com",
+  projectId: "wasl-523b4",
+  storageBucket: "wasl-523b4.firebasestorage.app",
+  messagingSenderId: "410509570015",
+  appId: "1:410509570015:web:4c9a86048b3e8be0bd1e6a",
+  measurementId: "G-DD60XW5EVT"
+};
 
-    // تعريف دالة البحث
-    searchInput.addEventListener('input', function() {
-        const searchText = this.value.toLowerCase();
-        const ideaCards = document.querySelectorAll('.idea-card');
+// ✅ 2. تهيئة Firebase
+const app = initializeApp(firebaseConfig);
+// Choose ONE database type:
+// For Firestore:
+const db = getFirestore(app);
+// OR for Realtime Database (comment out the one you don't use):
+// const db = getDatabase(app);
+const auth = getAuth(app);
+
+// استخدام العناصر الموجودة بالفعل في HTML
+const ideasContainer = document.getElementById("ideas-container");
+const noIdeasMessage = document.getElementById("no-ideas-message");
+const searchInput = document.getElementById("searchInput");
+
+// تعريف دالة البحث
+searchInput.addEventListener('input', function() {
+    const searchText = this.value.toLowerCase();
+    const ideaCards = document.querySelectorAll('.idea-card');
+    
+    ideaCards.forEach(card => {
+        const title = card.querySelector('.idea-content p:first-child').textContent.toLowerCase();
+        const field = card.querySelector('.idea-content p:nth-child(2)').textContent.toLowerCase();
         
-        ideaCards.forEach(card => {
-            const title = card.querySelector('.idea-content p:first-child').textContent.toLowerCase();
-            const field = card.querySelector('.idea-content p:nth-child(2)').textContent.toLowerCase();
-            
-            if (title.includes(searchText) || field.includes(searchText)) {
-                card.style.display = '';
-            } else {
-                card.style.display = 'none';
-            }
-        });
+        if (title.includes(searchText) || field.includes(searchText)) {
+            card.style.display = '';
+        } else {
+            card.style.display = 'none';
+        }
     });
+});
 
-    // مراقبة قاعدة البيانات والتحديث تلقائيًا
-    onSnapshot(collection(db, "ideas"), (snapshot) => {
-        console.log("🔥 البيانات القادمة من الداتابيس:", snapshot.docs.map(doc => doc.data())); // طباعة البيانات في الكونسول
+// اختر إما Firestore أو Realtime Database
+// 1. إذا كنت تستخدم Firestore:
+onSnapshot(collection(db, "ideas"), (snapshot) => {
+    console.log("🔥 البيانات القادمة من الداتابيس:", snapshot.docs.map(doc => doc.data())); // طباعة البيانات في الكونسول
 
-        // التحقق إذا كانت قاعدة البيانات فارغة
-        if (snapshot.empty || snapshot.docs.length === 0) {
-            console.log("لا توجد وثائق في مجموعة 'ideas'");
-            noIdeasMessage.style.display = "block"; // عرض رسالة "لا توجد أفكار"
-            ideasContainer.innerHTML = ''; // تفريغ حاوية البطاقات
-            return; // الخروج من الدالة
+    // التحقق إذا كانت قاعدة البيانات فارغة
+    if (snapshot.empty) {
+        console.log("لا توجد وثائق في مجموعة 'ideas'");
+        noIdeasMessage.style.display = "block"; // عرض رسالة "لا توجد أفكار"
+        ideasContainer.innerHTML = ''; // تفريغ حاوية البطاقات
+        return; // الخروج من الدالة
+    }
+
+    // إخفاء رسالة "لا توجد أفكار" لأن هناك أفكار فعلية
+    noIdeasMessage.style.display = "none";
+
+    // إفراغ حاوية البطاقات قبل إضافة البطاقات الجديدة
+    ideasContainer.innerHTML = '';
+
+    snapshot.forEach((doc) => {
+        const idea = doc.data();
+        const ideaId = doc.id; // احصل على معرف الفكرة
+
+        console.log("معالجة الفكرة:", ideaId, idea); // للتصحيح
+
+        // التحقق من وجود الفكرة وعنوانها
+        if (!idea || !idea.title) {
+            console.log("تخطي فكرة غير مكتملة:", ideaId);
+            return; // تخطي أي فكرة غير مكتملة
         }
 
-        // إخفاء رسالة "لا توجد أفكار" لأن هناك أفكار فعلية
-        noIdeasMessage.style.display = "none";
+        createIdeaCard(idea, ideaId);
+    });
+});
 
-        // إفراغ حاوية البطاقات قبل إضافة البطاقات الجديدة
-        ideasContainer.innerHTML = '';
+// 2. أو إذا كنت تستخدم Realtime Database (علق على الكود أعلاه واستخدم هذا):
+/*
+const ideasRef = ref(db, 'ideas');
+onValue(ideasRef, (snapshot) => {
+    console.log("🔥 البيانات القادمة من الداتابيس:", snapshot.val()); // طباعة البيانات في الكونسول
+    
+    // التحقق إذا كانت قاعدة البيانات فارغة
+    if (!snapshot.exists()) {
+        console.log("لا توجد بيانات في مسار 'ideas'");
+        noIdeasMessage.style.display = "block"; // عرض رسالة "لا توجد أفكار"
+        ideasContainer.innerHTML = ''; // تفريغ حاوية البطاقات
+        return; // الخروج من الدالة
+    }
+    
+    // إخفاء رسالة "لا توجد أفكار" لأن هناك أفكار فعلية
+    noIdeasMessage.style.display = "none";
+    
+    // إفراغ حاوية البطاقات قبل إضافة البطاقات الجديدة
+    ideasContainer.innerHTML = '';
+    
+    const ideas = snapshot.val();
+    
+    // التكرار على كل فكرة في قاعدة البيانات
+    Object.keys(ideas).forEach((ideaId) => {
+        const idea = ideas[ideaId];
+        
+        console.log("معالجة الفكرة:", ideaId, idea); // للتصحيح
+        
+        // التحقق من وجود الفكرة وعنوانها
+        if (!idea || !idea.title) {
+            console.log("تخطي فكرة غير مكتملة:", ideaId);
+            return; // تخطي أي فكرة غير مكتملة
+        }
+        
+        createIdeaCard(idea, ideaId);
+    });
+});
+*/
 
-        snapshot.forEach((doc) => {
-            const idea = doc.data();
-            const ideaId = doc.id; // احصل على معرف الفكرة
+// دالة مشتركة لإنشاء بطاقة الفكرة
+function createIdeaCard(idea, ideaId) {
+    const ideaCard = document.createElement("div");
+    ideaCard.classList.add("idea-card");
+    ideaCard.dataset.id = ideaId; // حفظ معرف الفكرة في البطاقة
 
-            console.log("معالجة الفكرة:", ideaId, idea); // للتصحيح
+    // استخدام أسماء الحقول الصحيحة من قاعدة البيانات
+    const creatorName = idea.username || "مستخدم مجهول";
+    const ideaTitle = idea.title || "بدون عنوان";
+    const ideaField = idea.domain || "غير محدد";
+    const timestamp = idea.timestamp || "";
+    // لا توجد صورة ملف شخصي في البيانات، لذا استخدم صورة افتراضية
+    const userProfilePic = "images/default-profile.png"; // استخدام الصورة الافتراضية دائمًا
 
-            // التحقق من وجود الفكرة وعنوانها
-            if (!idea || !idea.title) { // تغيير من ideaTitle إلى title
-                console.log("تخطي فكرة غير مكتملة:", ideaId);
-                return; // تخطي أي فكرة غير مكتملة
-            }
+    ideaCard.innerHTML = `
+        <div class="profile">
+            <a href="account1.html" class="profile-link" onclick="event.stopPropagation();">
+                <img src="${userProfilePic}" alt="${creatorName}">
+            </a>
+            <p class="creator">${creatorName}</p>
+        </div>
+        <div class="idea-content">
+            <p><strong>${ideaTitle}</strong></p>
+            <p>مجال الفكرة: ${ideaField}</p>
+            <p>${timestamp}</p>
+        </div>
+    `;
 
-            const ideaCard = document.createElement("div");
-            ideaCard.classList.add("idea-card");
-            ideaCard.dataset.id = ideaId; // حفظ معرف الفكرة في البطاقة
-
-            // استخدام أسماء الحقول الصحيحة من قاعدة البيانات
-            const creatorName = idea.username ;
-            const ideaTitle = idea.title ;
-            const ideaField = idea.domain ;
-            const ideaDescription = idea.description ;
-            const timestamp = idea.timestamp ;
-            // لا توجد صورة ملف شخصي في البيانات، لذا استخدم صورة افتراضية
-            const userProfilePic = "images/default-profile.png"; // استخدام الصورة الافتراضية دائمًا
-
-            ideaCard.innerHTML = `
-                <div class="profile">
-                    <a href="account1.html" class="profile-link" onclick="event.stopPropagation();">
-                        <img src="${userProfilePic}" alt="${creatorName}">
-                    </a>
-                    <p class="creator">${creatorName}</p>
-                </div>
-                <div class="idea-content">
-                    <p><strong>${ideaTitle}</strong></p>
-                    <p>مجال الفكرة: ${ideaField}</p>
-                    <p>${timestamp}</p>
-                </div>
-            `;
-
-            // إضافة حدث النقر للانتقال إلى صفحة تفاصيل الفكرة
-            ideaCard.addEventListener('click', () => {
-                window.location.href = `ideaDetails.html?id=${ideaId}`;
-            });
-
-            // إضافة البطاقة إلى حاوية الأفكار
-            ideasContainer.appendChild(ideaCard);
-        });
+    // إضافة حدث النقر للانتقال إلى صفحة تفاصيل الفكرة
+    ideaCard.addEventListener('click', () => {
+        window.location.href = `ideaDetails.html?id=${ideaId}`;
     });
 
-    // إضافة دالة toggleMenu للاستخدام العالمي
-    window.toggleMenu = function() {
-        const menuOverlay = document.getElementById("menuOverlay");
-        menuOverlay.classList.toggle("active");
-        const hamburgerIcon = document.getElementById("hamburgerIcon");
-        const closeIcon = document.getElementById("closeIcon");
-        
-        hamburgerIcon.classList.toggle("hidden");
-        closeIcon.classList.toggle("visible");
-    };
+    // إضافة البطاقة إلى حاوية الأفكار
+    ideasContainer.appendChild(ideaCard);
+}
+
+// إضافة دالة toggleMenu للاستخدام العالمي
+window.toggleMenu = function() {
+    const menuOverlay = document.getElementById("menuOverlay");
+    menuOverlay.classList.toggle("active");
+    const hamburgerIcon = document.getElementById("hamburgerIcon");
+    const closeIcon = document.getElementById("closeIcon");
+    
+    hamburgerIcon.classList.toggle("hidden");
+    closeIcon.classList.toggle("visible");
+};
 </script>
 </body>
 </html>
