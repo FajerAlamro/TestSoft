@@ -206,9 +206,9 @@
         </form>
     </main>
 
-    <script type="module">
+<script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
-import { getDatabase, ref, push, set, update } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
+import { getDatabase, ref, push, set, update, get } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
 
 // 🔥 1. إعداد Firebase
@@ -266,18 +266,20 @@ document.getElementById("ideaForm").addEventListener("submit", async function(ev
         // محاولة الحصول على بيانات المستخدم المخزنة في قاعدة البيانات
         const userRef = ref(db, `users/${currentUser.uid}`);
         const userSnapshot = await get(userRef);
-       // Make sure you're properly getting user data from Firebase Auth and/or Firestore
-let userData = {
-    displayName: currentUser.displayName || "مستخدم",
-    photoURL: currentUser.photoURL || "images/default-profile.png"
-};
+        
+        // Make sure you're properly getting user data from Firebase Auth and/or Firestore
+        let userData = {
+            displayName: currentUser.displayName || "مستخدم",
+            photoURL: currentUser.photoURL || "images/default-profile.png"
+        };
 
-// If user data exists in the database, update the values
-if (userSnapshot.exists()) {
-    const fetchedUserData = userSnapshot.val();
-    if (fetchedUserData.username) userData.displayName = fetchedUserData.username;
-    if (fetchedUserData.profilePicture) userData.photoURL = fetchedUserData.profilePicture;
-}
+        // If user data exists in the database, update the values
+        if (userSnapshot.exists()) {
+            const fetchedUserData = userSnapshot.val();
+            if (fetchedUserData.username) userData.displayName = fetchedUserData.username;
+            if (fetchedUserData.profilePicture) userData.photoURL = fetchedUserData.profilePicture;
+        }
+        
         // إنشاء مرجع جديد للفكرة
         const ideasRef = ref(db, "ideas");
         const newIdeaRef = push(ideasRef);
@@ -293,7 +295,7 @@ if (userSnapshot.exists()) {
             domain: domain,
             userId: currentUser.uid,
             username: userData.displayName,
-            userPhotoURL: userData.photoURL,  // إضافة صورة المستخدم
+            userProfilePic: userData.photoURL,  // تغيير اسم الحقل ليتطابق مع الاسم المستخدم في عرض الأفكار
             timestamp: timestamp
         };
         
@@ -302,17 +304,18 @@ if (userSnapshot.exists()) {
         console.log("Idea saved to main ideas list");
         
         // 2. حفظ مرجع للفكرة في ملف المستخدم
-       // When saving to user's ideas collection
-const userIdeasRef = ref(db, `users/${currentUser.uid}/ideas/${ideaId}`);
-await set(userIdeasRef, {
-    id: ideaId,
-    title: ideaTitle,          // Include these fields
-    category: domain,          // Make sure category matches the field name in your display code
-    date: new Date().toLocaleDateString(),
-    timestamp: timestamp,
-    username: userData.displayName,
-    userPhotoURL: userData.photoURL
-});
+        const userIdeasRef = ref(db, `users/${currentUser.uid}/ideas/${ideaId}`);
+        await set(userIdeasRef, {
+            id: ideaId,
+            title: ideaTitle,
+            description: ideaDes,
+            domain: domain,            // استخدام domain بدلاً من category لتوحيد المصطلحات
+            date: new Date().toLocaleDateString(),
+            timestamp: timestamp,
+            username: userData.displayName,
+            userProfilePic: userData.photoURL  // تغيير اسم الحقل ليتطابق مع الاسم المستخدم في عرض الأفكار
+        });
+        
         console.log("Idea reference saved to user profile");
         
         alert("! تمت إضافة الفكرة بنجاح");
@@ -326,9 +329,6 @@ await set(userIdeasRef, {
         alert("حدث خطأ أثناء إضافة الفكرة، حاول مرة أخرى!");
     }
 });
-
-// إضافة استيراد دالة get من Firebase
-import { get } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
-    </script>
+</script>
 </body>
 </html>
