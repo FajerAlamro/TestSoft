@@ -406,7 +406,6 @@
             </div>
         </div>
     </div>
-
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
 import { getFirestore, collection, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
@@ -444,12 +443,17 @@ onSnapshot(ideasQuery, snapshot => {
 
   snapshot.docs.forEach(docSnap => {
     const idea = docSnap.data();
+    const photoSrc = idea.userProfilePic?.startsWith("http")
+      ? idea.userProfilePic
+      : `/${idea.userProfilePic.replace(/^\/?/, "")}`;
+
     const card = document.createElement("div");
     card.className = "idea-card";
     card.innerHTML = `
       <div class="profile">
         <a href="account1.html?id=${idea.userId}" class="profile-link">
-          <img src="${idea.userProfilePic}" alt="${idea.username}" onerror="this.src='images/default-profile.png'">
+          <img src="${photoSrc}" alt="${idea.username}" 
+               onerror="this.onerror=null; this.src='/images/default-profile.png';">
         </a>
         <p class="creator">${idea.username}</p>
       </div>
@@ -464,6 +468,7 @@ onSnapshot(ideasQuery, snapshot => {
   });
 });
 </script>
+
 
 </body>
 </html>
