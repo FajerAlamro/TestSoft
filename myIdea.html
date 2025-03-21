@@ -210,6 +210,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
 import { getFirestore, collection, addDoc, doc, updateDoc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
+import { getStorage, ref as storageRef, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-storage.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyC68KD9M_rGGOoyfQaW925LT8ipoj9jE44",
@@ -223,6 +224,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
+const storage = getStorage(app);
 
 let currentUser = null;
 onAuthStateChanged(auth, user => currentUser = user);
@@ -239,13 +241,17 @@ document.getElementById("ideaForm").addEventListener("submit", async e => {
   const userSnap = await getDoc(userRef);
   const userData = userSnap.exists() ? userSnap.data() : {};
 
+  // Download URL للصورة الافتراضية من Storage
+  const defaultPicRef = storageRef(storage, "profileImages/default-profile.png");
+  const defaultPicUrl = await getDownloadURL(defaultPicRef);
+
   const idea = {
     title,
     description,
     domain: domainValue,
     userId: currentUser.uid,
     username: userData.username || currentUser.displayName || "مستخدم",
-    userProfilePic: userData.profilePicture || currentUser.photoURL || "/images/default-profile.png",
+    userProfilePic: userData.profilePicture || currentUser.photoURL || defaultPicUrl,
     createdAt: serverTimestamp()
   };
 
@@ -261,6 +267,7 @@ document.getElementById("ideaForm").addEventListener("submit", async e => {
   }
 });
 </script>
+
 
 </body>
 </html>
