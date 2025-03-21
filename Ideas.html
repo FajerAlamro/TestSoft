@@ -522,12 +522,15 @@ async function processIdeaWithUserData(idea, ideaId) {
     
     // استخدام البيانات المخزنة في الفكرة إذا كانت متوفرة
     let displayName = idea.username || "مستخدم مجهول";
-    let photoURL = idea.userPhotoURL || "images/default-profile.png";
+    
+    // تحقق من جميع الاسماء المحتملة للصورة الشخصية في الفكرة
+    let photoURL = idea.userProfilePic || idea.userPhotoURL || "images/default-profile.png";
     
     console.log("Initial user data:", { displayName, photoURL });
+    console.log("Available idea fields:", Object.keys(idea));
     
     // محاولة الحصول على بيانات إضافية من ملف المستخدم إذا كانت البيانات المباشرة غير كاملة
-    if (userId && (!idea.userPhotoURL || !idea.username)) {
+    if (userId && (!photoURL || photoURL === "images/default-profile.png" || !displayName || displayName === "مستخدم مجهول")) {
         try {
             console.log("Fetching additional user data...");
             const userRef = ref(db, `users/${userId}`);
@@ -538,12 +541,12 @@ async function processIdeaWithUserData(idea, ideaId) {
                 console.log("User data found:", userData);
                 
                 // تحديث البيانات فقط إذا كانت غير متوفرة في الفكرة
-                if (!idea.username) {
+                if (!displayName || displayName === "مستخدم مجهول") {
                     displayName = userData.displayName || userData.name || userData.username || displayName;
                 }
                 
-                if (!idea.userPhotoURL) {
-                    photoURL = userData.photoURL || userData.profilePic || userData.photoUrl || userData.avatar || photoURL;
+                if (!photoURL || photoURL === "images/default-profile.png") {
+                    photoURL = userData.profilePicture || userData.photoURL || userData.userProfilePic || userData.profilePic || userData.photoUrl || userData.avatar || photoURL;
                 }
                 
                 console.log(`User data updated: ${displayName}, ${photoURL}`);
@@ -565,6 +568,11 @@ async function processIdeaWithUserData(idea, ideaId) {
     
     // Create profile link
     const profileLink = userId ? `account1.html?id=${userId}` : "account1.html";
+    
+    // Debug output
+    console.log(`Creating card for idea: ${idea.title}`);
+    console.log(`With user: ${displayName} (${userId})`);
+    console.log(`Photo URL: ${photoURL}`);
     
     // Create card HTML
     ideaCard.innerHTML = `
