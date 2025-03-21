@@ -442,8 +442,8 @@ onSnapshot(ideasQuery, snapshot => {
   }
   noIdeasMessage.style.display = "none";
 
-  snapshot.docs.forEach(doc => {
-    const idea = doc.data();
+  snapshot.docs.forEach(docSnap => {
+    const idea = docSnap.data();
     const card = document.createElement("div");
     card.className = "idea-card";
     card.innerHTML = `
@@ -459,7 +459,7 @@ onSnapshot(ideasQuery, snapshot => {
         <p>${new Date(idea.createdAt.toDate()).toLocaleDateString('ar-SA')}</p>
       </div>
     `;
-    card.addEventListener("click", ()=> window.location.href = `ideaDetails.html?id=${doc.id}`);
+    card.addEventListener("click", () => window.location.href = `ideaDetails.html?id=${docSnap.id}`);
     ideasContainer.appendChild(card);
   });
 });
