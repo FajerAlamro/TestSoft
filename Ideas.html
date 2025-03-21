@@ -451,18 +451,36 @@ searchInput.addEventListener('input', function() {
     });
 });
 
-// دالة لتوليد تاريخ هجري عشوائي في السنوات 1444 أو 1445
+// دالة لتحويل الأرقام إلى أرقام عربية
+function toArabicNumerals(number) {
+    const arabicDigits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+    return number.toString().replace(/\d/g, match => arabicDigits[parseInt(match)]);
+}
+
+// دالة لتوليد تاريخ هجري عشوائي في السنوات 1444 أو 1445 بالأرقام العربية
 function generateRandomHijriDate() {
     const hijriYear = Math.random() < 0.5 ? 1444 : 1445;
     const hijriMonth = Math.floor(Math.random() * 12) + 1; // شهر عشوائي من 1 إلى 12
     const hijriDay = Math.floor(Math.random() * 29) + 1; // يوم عشوائي من 1 إلى 29
     
-    return `${hijriYear}/${hijriMonth}/${hijriDay}`;
+    // تحويل الأرقام إلى أرقام عربية
+    const arabicYear = toArabicNumerals(hijriYear);
+    const arabicMonth = toArabicNumerals(hijriMonth);
+    const arabicDay = toArabicNumerals(hijriDay);
+    
+    return `${arabicYear}/${arabicMonth}/${arabicDay}`;
 }
+
+// مراقبة حالة تسجيل الدخول للمستخدم
+let currentUser = null;
+onAuthStateChanged(auth, (user) => {
+    currentUser = user;
+    console.log("حالة المستخدم تغيرت:", user ? `مسجل الدخول (${user.uid})` : "غير مسجل الدخول");
+});
 
 // مراقبة قاعدة البيانات والتحديث تلقائيًا - استخدام Realtime Database
 const ideasRef = ref(db, 'ideas');
-onValue(ideasRef, (snapshot) => {
+onValue(ideasRef, async (snapshot) => {
     console.log("🔥 البيانات القادمة من الداتابيس:", snapshot.val()); // طباعة البيانات في الكونسول
     
     // التحقق إذا كانت قاعدة البيانات فارغة
@@ -480,39 +498,61 @@ onValue(ideasRef, (snapshot) => {
     ideasContainer.innerHTML = '';
     
     const ideas = snapshot.val();
+    const ideasArray = [];
     
-    // التكرار على كل فكرة في قاعدة البيانات
-    Object.keys(ideas).forEach((ideaId) => {
+    // تحويل البيانات إلى مصفوفة وجلب بيانات المستخدمين
+    for (const ideaId of Object.keys(ideas)) {
         const idea = ideas[ideaId];
-        
-        console.log("معالجة الفكرة:", ideaId, idea); // للتصحيح
         
         // التحقق من وجود الفكرة وعنوانها
         if (!idea || !idea.title) {
             console.log("تخطي فكرة غير مكتملة:", ideaId);
-            return; // تخطي أي فكرة غير مكتملة
+            continue; // تخطي أي فكرة غير مكتملة
         }
         
+        // جلب بيانات المستخدم إذا كان هناك معرف مستخدم
+        if (idea.userId) {
+            try {
+                const userRef = ref(db, `users/${idea.userId}`);
+                const userSnapshot = await get(userRef);
+                
+                if (userSnapshot.exists()) {
+                    const userData = userSnapshot.val();
+                    console.log("بيانات المستخدم لهذه الفكرة:", userData);
+                    
+                    // إضافة بيانات المستخدم إلى الفكرة
+                    idea.userDisplayName = userData.displayName || userData.name || idea.username || "مستخدم مجهول";
+                    idea.userPhotoURL = userData.photoURL || userData.profilePic || null;
+                }
+            } catch (error) {
+                console.error("خطأ في جلب بيانات المستخدم:", error);
+            }
+        }
+        
+        // إضافة معرف الفكرة إلى الكائن
+        idea.id = ideaId;
+        
+        // إضافة الفكرة إلى المصفوفة
+        ideasArray.push(idea);
+    }
+    
+    // عرض جميع الأفكار
+    ideasArray.forEach(idea => {
         const ideaCard = document.createElement("div");
         ideaCard.classList.add("idea-card");
-        ideaCard.dataset.id = ideaId; // حفظ معرف الفكرة في البطاقة
+        ideaCard.dataset.id = idea.id; // حفظ معرف الفكرة في البطاقة
 
         // استخدام البيانات من الفكرة نفسها
-        const creatorName = idea.username || "مستخدم مجهول";
+        const creatorName = idea.userDisplayName || idea.username || "مستخدم مجهول";
         const ideaTitle = idea.title || "بدون عنوان";
         const ideaField = idea.domain || "غير محدد";
         const userId = idea.userId || null;
         
-        // توليد تاريخ هجري عشوائي
+        // توليد تاريخ هجري عشوائي بالأرقام العربية
         const randomHijriDate = generateRandomHijriDate();
         
-        // استخدام الصورة الافتراضية أو صورة المستخدم إذا كانت موجودة
-        let userProfilePic = "images/default-profile.png";
-        
-        // إذا كان هناك صورة في بيانات الفكرة، استخدمها
-        if (idea.userPhoto) {
-            userProfilePic = idea.userPhoto;
-        }
+        // استخدام الصورة من بيانات المستخدم أو الصورة الافتراضية
+        const userProfilePic = idea.userPhotoURL || "images/default-profile.png";
         
         // إنشاء رابط للملف الشخصي
         const profileLink = userId ? `account1.html?id=${userId}` : "account1.html";
@@ -533,7 +573,7 @@ onValue(ideasRef, (snapshot) => {
 
         // إضافة حدث النقر للانتقال إلى صفحة تفاصيل الفكرة
         ideaCard.addEventListener('click', () => {
-            window.location.href = `ideaDetails.html?id=${ideaId}`;
+            window.location.href = `ideaDetails.html?id=${idea.id}`;
         });
 
         // إضافة البطاقة إلى حاوية الأفكار
