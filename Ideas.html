@@ -471,115 +471,119 @@ function generateRandomHijriDate() {
     return `${arabicYear}/${arabicMonth}/${arabicDay}`;
 }
 
-// مراقبة حالة تسجيل الدخول للمستخدم
-let currentUser = null;
-onAuthStateChanged(auth, (user) => {
-    currentUser = user;
-    console.log("حالة المستخدم تغيرت:", user ? `مسجل الدخول (${user.uid})` : "غير مسجل الدخول");
-});
+// دالة لجلب معلومات المستخدم باستخدام معرف المستخدم
+async function getUserInfo(userId) {
+    if (!userId) {
+        console.log("لا يوجد معرف مستخدم");
+        return null;
+    }
+
+    console.log("جاري جلب معلومات المستخدم:", userId);
+    try {
+        const userRef = ref(db, `users/${userId}`);
+        const userSnapshot = await get(userRef);
+        
+        if (userSnapshot.exists()) {
+            console.log("تم العثور على بيانات المستخدم:", userSnapshot.val());
+            return userSnapshot.val();
+        } else {
+            console.log("لم يتم العثور على بيانات للمستخدم:", userId);
+            return null;
+        }
+    } catch (error) {
+        console.error("خطأ في جلب بيانات المستخدم:", error);
+        return null;
+    }
+}
 
 // مراقبة قاعدة البيانات والتحديث تلقائيًا - استخدام Realtime Database
 const ideasRef = ref(db, 'ideas');
-onValue(ideasRef, async (snapshot) => {
-    console.log("🔥 البيانات القادمة من الداتابيس:", snapshot.val()); // طباعة البيانات في الكونسول
+onValue(ideasRef, (snapshot) => {
+    console.log("🔥 البيانات القادمة من الداتابيس:", snapshot.val());
     
     // التحقق إذا كانت قاعدة البيانات فارغة
     if (!snapshot.exists()) {
         console.log("لا توجد بيانات في مسار 'ideas'");
-        noIdeasMessage.style.display = "block"; // عرض رسالة "لا توجد أفكار"
-        ideasContainer.innerHTML = ''; // تفريغ حاوية البطاقات
-        return; // الخروج من الدالة
+        noIdeasMessage.style.display = "block";
+        ideasContainer.innerHTML = '';
+        return;
     }
     
-    // إخفاء رسالة "لا توجد أفكار" لأن هناك أفكار فعلية
+    // إخفاء رسالة "لا توجد أفكار" وتفريغ الحاوية
     noIdeasMessage.style.display = "none";
-    
-    // إفراغ حاوية البطاقات قبل إضافة البطاقات الجديدة
     ideasContainer.innerHTML = '';
     
     const ideas = snapshot.val();
-    const ideasArray = [];
     
-    // تحويل البيانات إلى مصفوفة وجلب بيانات المستخدمين
-    for (const ideaId of Object.keys(ideas)) {
+    // معالجة كل فكرة وإضافتها إلى الواجهة
+    Object.keys(ideas).forEach((ideaId) => {
         const idea = ideas[ideaId];
         
-        // التحقق من وجود الفكرة وعنوانها
         if (!idea || !idea.title) {
             console.log("تخطي فكرة غير مكتملة:", ideaId);
-            continue; // تخطي أي فكرة غير مكتملة
+            return;
         }
         
-        // جلب بيانات المستخدم إذا كان هناك معرف مستخدم
-        if (idea.userId) {
-            try {
-                const userRef = ref(db, `users/${idea.userId}`);
-                const userSnapshot = await get(userRef);
-                
-                if (userSnapshot.exists()) {
-                    const userData = userSnapshot.val();
-                    console.log("بيانات المستخدم لهذه الفكرة:", userData);
-                    
-                    // إضافة بيانات المستخدم إلى الفكرة
-                    idea.userDisplayName = userData.displayName || userData.name || idea.username || "مستخدم مجهول";
-                    idea.userPhotoURL = userData.photoURL || userData.profilePic || null;
-                }
-            } catch (error) {
-                console.error("خطأ في جلب بيانات المستخدم:", error);
-            }
-        }
-        
-        // إضافة معرف الفكرة إلى الكائن
-        idea.id = ideaId;
-        
-        // إضافة الفكرة إلى المصفوفة
-        ideasArray.push(idea);
-    }
-    
-    // عرض جميع الأفكار
-    ideasArray.forEach(idea => {
-        const ideaCard = document.createElement("div");
-        ideaCard.classList.add("idea-card");
-        ideaCard.dataset.id = idea.id; // حفظ معرف الفكرة في البطاقة
-
-        // استخدام البيانات من الفكرة نفسها
-        const creatorName = idea.userDisplayName || idea.username || "مستخدم مجهول";
-        const ideaTitle = idea.title || "بدون عنوان";
-        const ideaField = idea.domain || "غير محدد";
-        const userId = idea.userId || null;
-        
-        // توليد تاريخ هجري عشوائي بالأرقام العربية
-        const randomHijriDate = generateRandomHijriDate();
-        
-        // استخدام الصورة من بيانات المستخدم أو الصورة الافتراضية
-        const userProfilePic = idea.userPhotoURL || "images/default-profile.png";
-        
-        // إنشاء رابط للملف الشخصي
-        const profileLink = userId ? `account1.html?id=${userId}` : "account1.html";
-
-        ideaCard.innerHTML = `
-            <div class="profile">
-                <a href="${profileLink}" class="profile-link" onclick="event.stopPropagation();">
-                    <img src="${userProfilePic}" alt="${creatorName}">
-                </a>
-                <p class="creator">${creatorName}</p>
-            </div>
-            <div class="idea-content">
-                <p><strong>${ideaTitle}</strong></p>
-                <p>مجال الفكرة: ${ideaField}</p>
-                <p>${randomHijriDate}</p>
-            </div>
-        `;
-
-        // إضافة حدث النقر للانتقال إلى صفحة تفاصيل الفكرة
-        ideaCard.addEventListener('click', () => {
-            window.location.href = `ideaDetails.html?id=${idea.id}`;
-        });
-
-        // إضافة البطاقة إلى حاوية الأفكار
-        ideasContainer.appendChild(ideaCard);
+        // استخدم معرف المستخدم لجلب البيانات الخاصة به وعرض البطاقة
+        processIdeaWithUserData(idea, ideaId);
     });
 });
+
+// دالة لمعالجة الفكرة مع بيانات المستخدم
+async function processIdeaWithUserData(idea, ideaId) {
+    // استخراج معرف المستخدم من الفكرة
+    const userId = idea.userId;
+    console.log(`معالجة الفكرة "${idea.title}" للمستخدم: ${userId}`);
+    
+    // البيانات الافتراضية
+    let displayName = idea.username || "مستخدم مجهول";
+    let photoURL = "images/default-profile.png";
+    
+    // إذا كان هناك معرف مستخدم، جلب بياناته
+    if (userId) {
+        const userData = await getUserInfo(userId);
+        if (userData) {
+            // استخدام بيانات المستخدم إذا وجدت
+            displayName = userData.displayName || userData.name || userData.username || displayName;
+            photoURL = userData.photoURL || userData.profilePic || userData.photoUrl || photoURL;
+            console.log(`تم تحديث البيانات: ${displayName}, ${photoURL}`);
+        }
+    }
+    
+    // توليد تاريخ هجري عشوائي
+    const hijriDate = generateRandomHijriDate();
+    
+    // إنشاء البطاقة
+    const ideaCard = document.createElement("div");
+    ideaCard.classList.add("idea-card");
+    ideaCard.dataset.id = ideaId;
+    
+    // إنشاء رابط الملف الشخصي
+    const profileLink = userId ? `account1.html?id=${userId}` : "account1.html";
+    
+    // إنشاء HTML البطاقة
+    ideaCard.innerHTML = `
+        <div class="profile">
+            <a href="${profileLink}" class="profile-link" onclick="event.stopPropagation();">
+                <img src="${photoURL}" alt="${displayName}">
+            </a>
+            <p class="creator">${displayName}</p>
+        </div>
+        <div class="idea-content">
+            <p><strong>${idea.title || "بدون عنوان"}</strong></p>
+            <p>مجال الفكرة: ${idea.domain || "غير محدد"}</p>
+            <p>${hijriDate}</p>
+        </div>
+    `;
+    
+    // إضافة حدث النقر
+    ideaCard.addEventListener('click', () => {
+        window.location.href = `ideaDetails.html?id=${ideaId}`;
+    });
+    
+    // إضافة البطاقة إلى الحاوية
+    ideasContainer.appendChild(ideaCard);
+}
 
 // إضافة دالة toggleMenu للاستخدام العالمي
 window.toggleMenu = function() {
