@@ -296,8 +296,13 @@
                 alert("! تمت إضافة الفكرة بنجاح");
                 document.getElementById("ideaForm").reset();
                 
-                // التوجيه إلى صفحة الأفكار أو صفحة البروفايل
-                window.location.href = "myIdea.html";
+                // بدلاً من توجيه المستخدم إلى صفحة أخرى، نعود إلى الصفحة السابقة
+                history.back();
+                
+                // يمكنك أيضًا استخدام أحد هذه البدائل حسب هيكل موقعك:
+                // window.location.href = "index.html"; // توجيه إلى الصفحة الرئيسية
+                // window.location.href = "./"; // توجيه إلى المجلد الحالي
+                // window.location.href = "../profile.html"; // توجيه إلى صفحة البروفايل في المجلد الأعلى
             } catch (error) {
                 console.error("Error saving idea:", error);
                 alert("حدث خطأ أثناء إضافة الفكرة، حاول مرة أخرى!");
