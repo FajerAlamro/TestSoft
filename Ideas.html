@@ -408,23 +408,27 @@
     </div>
 
 <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
-
-    // إعداد Firebase
-    const firebaseConfig = {
-        apiKey: "AIzaSyC68KD9M_rGGOoyfQaW925LT8ipoj9jE44",
-        authDomain: "wasl-523b4.firebaseapp.com",
-        projectId: "wasl-523b4",
-        storageBucket: "wasl-523b4.appspot.com",
-        messagingSenderId: "410509570015",
-        appId: "1:410509570015:web:4c9a86048b3e8be0bd1e6a",
-        measurementId: "G-DD60XW5EVT"
-    };
-
-    // تهيئة التطبيق
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+        import { getDatabase, ref, push, set, update } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
+        
+        // 🔥 1. إعداد Firebase
+        const firebaseConfig = {
+          apiKey: "AIzaSyC68KD9M_rGGOoyfQaW925LT8ipoj9jE44",
+          authDomain: "wasl-523b4.firebaseapp.com",
+          databaseURL: "https://wasl-523b4-default-rtdb.firebaseio.com",
+          projectId: "wasl-523b4",
+          storageBucket: "wasl-523b4.firebasestorage.app",
+          messagingSenderId: "410509570015",
+          appId: "1:410509570015:web:4c9a86048b3e8be0bd1e6a",
+          measurementId: "G-DD60XW5EVT"
+        };
+        
+        // ✅ 2. تهيئة Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const auth = getAuth(app);
+                
 
     // استخدام العناصر الموجودة بالفعل في HTML
     const ideasContainer = document.getElementById("ideas-container");
@@ -483,11 +487,11 @@
             ideaCard.dataset.id = ideaId; // حفظ معرف الفكرة في البطاقة
 
             // استخدام أسماء الحقول الصحيحة من قاعدة البيانات
-            const creatorName = idea.username || "مستخدم غير معروف"; // تغيير من creatorName إلى username
-            const ideaTitle = idea.title || "عنوان غير متوفر"; // تغيير من ideaTitle إلى title
-            const ideaField = idea.domain || "مجال غير محدد"; // تغيير من ideaField إلى domain
-            const ideaDescription = idea.description || "لا يوجد وصف"; // تغيير من ideaDescription إلى description
-            const timestamp = idea.timestamp || "تاريخ غير متاح";
+            const creatorName = idea.username ;
+            const ideaTitle = idea.title ;
+            const ideaField = idea.domain ;
+            const ideaDescription = idea.description ;
+            const timestamp = idea.timestamp ;
             // لا توجد صورة ملف شخصي في البيانات، لذا استخدم صورة افتراضية
             const userProfilePic = "images/default-profile.png"; // استخدام الصورة الافتراضية دائمًا
 
