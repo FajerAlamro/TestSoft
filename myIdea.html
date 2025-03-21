@@ -6,7 +6,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@400..800&family=Caudex:ital,wght@0,400;0,700;1,400;1,700&family=Reem+Kufi+Fun:wght@400..700&display=swap" rel="stylesheet">
-        <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@400..800&family=Caudex:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
         
@@ -184,7 +184,7 @@
     </header>
     <main>
         <h1>أكتب نبذة عن فكرتك</h1>
-        <form id="ideaForm" method="POST" action="">
+        <form id="ideaForm">
             <div class="input-container">
                 <input type="text" id="ideaTitle" required placeholder=" ">
                 <label for="ideaTitle">عنوان الفكرة</label>
@@ -193,7 +193,7 @@
                 <textarea id="ideaDes" name="idea-description" placeholder=" "></textarea>
                 <label for="ideaDes">وصف الفكرة</label>
             </div>
-            <select name="domain" id="domain" class="input-container selectList" >
+            <select name="domain" id="domain" class="input-container selectList" required>
                 <option value="" disabled selected>مجال الفكرة</option>
                 <option value="التكنولوجيا والبرمجة">التكنولوجيا والبرمجة</option>
                 <option value="التعليم والتدريب">التعليم والتدريب</option>
@@ -207,86 +207,102 @@
     </main>
 
     <script type="module">
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
-    import { getDatabase, ref, push, set } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-database.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
-    
-    // 🔥 1. إعداد Firebase
-    const firebaseConfig = {
-        apiKey: "AIzaSyC68KD9M_rGGOoyfQaW925LT8ipoj9jE44",
-        authDomain: "wasl-523b4.firebaseapp.com",
-        databaseURL: "https://wasl-523b4-default-rtdb.firebaseio.com",
-        projectId: "wasl-523b4",
-        storageBucket: "wasl-523b4.firebasestorage.app",
-        messagingSenderId: "410509570015",
-        appId: "1:410509570015:web:4c9a86048b3e8be0bd1e6a",
-        measurementId: "G-DD60XW5EVT"
-    };
-    
-    // ✅ 2. تهيئة Firebase
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-    const auth = getAuth(app);
-    
-    let currentUser = null; // لتخزين المستخدم الحالي
-    
-    // 🔹 3. التأكد من تسجيل دخول المستخدم عند تحميل الصفحة
-    onAuthStateChanged(auth, (user) => {
-        if (user) {
-            currentUser = user; // حفظ المستخدم
-        } else {
-            currentUser = null;
-        }
-    });
-    
-    // 🔥 4. دالة إضافة الفكرة
-    document.getElementById("ideaForm").addEventListener("submit", function(event) {
-        event.preventDefault();
-    
-        const ideaTitle = document.getElementById("ideaTitle").value.trim();
-        const ideaDes = document.getElementById("ideaDes").value.trim();
-        const domain = document.getElementById("domain").value;
-    
-        if (ideaTitle === "" || ideaDes === "" || domain === "") {
-            alert("! يرجى التأكد من ملء جميع الحقول");
-            return;
-        }
-    
-        // ✅ التأكد من أن المستخدم مسجل دخول
-        if (!currentUser) {
-            alert("يجب تسجيل الدخول لإضافة فكرة!");
-            return;
-        }
-    
-        // 🔥 5. إضافة الفكرة إلى قاعدة البيانات
-        const ideasRef = ref(db, "ideas");
-        const newIdeaRef = push(ideasRef);
-        const ideaData = {
-            id: newIdeaRef.key,  // حفظ الـ ID لتسهيل جلب البيانات لاحقًا
-            title: ideaTitle,
-            description: ideaDes,
-            domain: domain,
-            userId: currentUser.uid, // ربط الفكرة بالمستخدم
-            timestamp: new Date().toISOString()
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+        import { getDatabase, ref, push, set, update } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
+        
+        // 🔥 1. إعداد Firebase
+        const firebaseConfig = {
+          apiKey: "AIzaSyC68KD9M_rGGOoyfQaW925LT8ipoj9jE44",
+          authDomain: "wasl-523b4.firebaseapp.com",
+          databaseURL: "https://wasl-523b4-default-rtdb.firebaseio.com",
+          projectId: "wasl-523b4",
+          storageBucket: "wasl-523b4.firebasestorage.app",
+          messagingSenderId: "410509570015",
+          appId: "1:410509570015:web:4c9a86048b3e8be0bd1e6a",
+          measurementId: "G-DD60XW5EVT"
         };
-    
-        // استخدام set لحفظ الفكرة
-        set(newIdeaRef, ideaData)
-        .then(() => {
-            alert("! تمت إضافة الفكرة بنجاح");
-            document.getElementById("ideaForm").reset();
-    
-            // 🔄 تحديث الصفحة تلقائيًا بعد الإضافة
-            window.location.reload();
-        })
-        .catch((error) => {
-            console.error("حدث خطأ أثناء حفظ البيانات:", error);
-            alert("حدث خطأ أثناء إضافة الفكرة، حاول مرة أخرى!");
+        
+        // ✅ 2. تهيئة Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const auth = getAuth(app);
+        
+        let currentUser = null; // لتخزين المستخدم الحالي
+        
+        // 🔹 3. التأكد من تسجيل دخول المستخدم عند تحميل الصفحة
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                console.log("User is signed in:", user.uid);
+                currentUser = user; // حفظ المستخدم
+            } else {
+                console.log("No user is signed in");
+                // توجيه المستخدم لصفحة تسجيل الدخول إذا لم يكن مسجل دخول
+                // window.location.href = "login.html";
+            }
         });
-    });
-</script>
-
-        </script>
+        
+        // 🔥 4. دالة إضافة الفكرة
+        document.getElementById("ideaForm").addEventListener("submit", async function(event) {
+            event.preventDefault();
+            console.log("Form submitted");
+            
+            const ideaTitle = document.getElementById("ideaTitle").value.trim();
+            const ideaDes = document.getElementById("ideaDes").value.trim();
+            const domain = document.getElementById("domain").value;
+        
+            if (ideaTitle === "" || ideaDes === "" || domain === "") {
+                alert("! يرجى التأكد من ملء جميع الحقول");
+                return;
+            }
+        
+            // ✅ التأكد من أن المستخدم مسجل دخول
+            if (!currentUser) {
+                alert("يجب تسجيل الدخول لإضافة فكرة!");
+                return;
+            }
+            
+            try {
+                // إنشاء مرجع جديد للفكرة
+                const ideasRef = ref(db, "ideas");
+                const newIdeaRef = push(ideasRef);
+                const ideaId = newIdeaRef.key;
+                
+                const timestamp = new Date().toISOString();
+                
+                // بيانات الفكرة
+                const ideaData = {
+                    id: ideaId,
+                    title: ideaTitle,
+                    description: ideaDes,
+                    domain: domain,
+                    userId: currentUser.uid,
+                    username: currentUser.displayName || "مستخدم",
+                    timestamp: timestamp
+                };
+                
+                // 1. حفظ الفكرة في قائمة الأفكار العامة
+                await set(newIdeaRef, ideaData);
+                console.log("Idea saved to main ideas list");
+                
+                // 2. حفظ مرجع للفكرة في ملف المستخدم
+                const userIdeasRef = ref(db, `users/${currentUser.uid}/ideas/${ideaId}`);
+                await set(userIdeasRef, {
+                    id: ideaId,
+                    timestamp: timestamp
+                });
+                console.log("Idea reference saved to user profile");
+                
+                alert("! تمت إضافة الفكرة بنجاح");
+                document.getElementById("ideaForm").reset();
+                
+                // التوجيه إلى صفحة الأفكار أو صفحة البروفايل
+                window.location.href = "ideas.html";
+            } catch (error) {
+                console.error("Error saving idea:", error);
+                alert("حدث خطأ أثناء إضافة الفكرة، حاول مرة أخرى!");
+            }
+        });
+    </script>
 </body>
 </html>
