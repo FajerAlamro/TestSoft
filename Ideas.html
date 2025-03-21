@@ -344,7 +344,8 @@ function confirmLogout() {
         </div>
     </div>
 
-    <script type="module">
+
+<script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
 import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
 
@@ -363,11 +364,9 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-const ideasContainer = document.querySelector("main");  // تحديد `main` كحاوية للأفكار
-const noIdeasMessage = document.createElement("p"); // إنشاء عنصر للجملة
-noIdeasMessage.textContent = "لا توجد أفكار حالياً.";
-noIdeasMessage.classList.add("no-ideas-message"); // إضافة كلاس للجملة
-ideasContainer.appendChild(noIdeasMessage); // إضافتها داخل `main`
+// استخدام العناصر الموجودة بالفعل في HTML
+const ideasContainer = document.getElementById("ideas-container");
+const noIdeasMessage = document.getElementById("no-ideas-message");
 
 // مراقبة قاعدة البيانات والتحديث تلقائيًا
 onSnapshot(collection(db, "ideas"), (snapshot) => {
@@ -376,24 +375,27 @@ onSnapshot(collection(db, "ideas"), (snapshot) => {
     // التحقق إذا كانت قاعدة البيانات فارغة
     if (snapshot.empty || snapshot.docs.length === 0) {
         noIdeasMessage.style.display = "block"; // عرض الجملة
+        ideasContainer.innerHTML = ''; // تأكد من أن حاوية البطاقات فارغة
         return; // الخروج من الفنكشن بدون تحميل أي كارد
     }
 
     // إخفاء الجملة لأن هناك أفكار فعلية
     noIdeasMessage.style.display = "none";
 
-    // إزالة الكروت القديمة
-    document.querySelectorAll(".idea-card").forEach(card => card.remove());
+    // إفراغ حاوية البطاقات قبل إضافة البطاقات الجديدة
+    ideasContainer.innerHTML = '';
 
     snapshot.forEach((doc) => {
         const idea = doc.data();
+        const ideaId = doc.id; // احصل على معرف الفكرة
 
-        if (!idea || !idea.ideaTitle || !idea.creatorName) {
+        if (!idea || !idea.ideaTitle) {
             return; // تخطي أي فكرة غير مكتملة
         }
 
         const ideaCard = document.createElement("div");
         ideaCard.classList.add("idea-card");
+        ideaCard.dataset.id = ideaId; // حفظ معرف الفكرة في البطاقة
 
         const creatorName = idea.creatorName || "مستخدم غير معروف";
         const ideaTitle = idea.ideaTitle || "عنوان غير متوفر";
@@ -415,9 +417,28 @@ onSnapshot(collection(db, "ideas"), (snapshot) => {
             </div>
         `;
 
+        // إضافة حدث النقر للانتقال إلى صفحة تفاصيل الفكرة
+        ideaCard.addEventListener('click', () => {
+            window.location.href = `ideaDetails.html?id=${ideaId}`;
+        });
+
         ideasContainer.appendChild(ideaCard);
     });
 });
+
+// إضافة وظيفة للقائمة
+function toggleMenu() {
+    const menuOverlay = document.getElementById("menuOverlay");
+    menuOverlay.classList.toggle("active");
+    const hamburgerIcon = document.getElementById("hamburgerIcon");
+    const closeIcon = document.getElementById("closeIcon");
+    
+    hamburgerIcon.classList.toggle("hidden");
+    closeIcon.classList.toggle("visible");
+}
+
+// جعل الدالة متاحة عالميًا
+window.toggleMenu = toggleMenu;
 
     </script>
     
