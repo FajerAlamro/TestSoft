@@ -208,159 +208,59 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
-import { getDatabase, ref, push, set, update, get } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
+import { getFirestore, collection, addDoc, doc, updateDoc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
 
-// 🔥 1. إعداد Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyC68KD9M_rGGOoyfQaW925LT8ipoj9jE44",
   authDomain: "wasl-523b4.firebaseapp.com",
-  databaseURL: "https://wasl-523b4-default-rtdb.firebaseio.com",
   projectId: "wasl-523b4",
   storageBucket: "wasl-523b4.firebasestorage.app",
   messagingSenderId: "410509570015",
-  appId: "1:410509570015:web:4c9a86048b3e8be0bd1e6a",
-  measurementId: "G-DD60XW5EVT"
+  appId: "1:410509570015:web:4c9a86048b3e8be0bd1e6a"
 };
 
-// ✅ 2. تهيئة Firebase
 const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
+const db = getFirestore(app);
 const auth = getAuth(app);
 
-let currentUser = null; // لتخزين المستخدم الحالي
+let currentUser = null;
+onAuthStateChanged(auth, user => currentUser = user);
 
-// 🔹 3. التأكد من تسجيل دخول المستخدم عند تحميل الصفحة
-onAuthStateChanged(auth, (user) => {
-    if (user) {
-        console.log("User is signed in:", user.uid);
-        currentUser = user; // حفظ المستخدم
-    } else {
-        console.log("No user is signed in");
-        // توجيه المستخدم لصفحة تسجيل الدخول إذا لم يكن مسجل دخول
-        // window.location.href = "login.html";
-    }
-});
+document.getElementById("ideaForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  if (!currentUser) return alert("يجب تسجيل الدخول");
 
-// 🔥 4. دالة إضافة الفكرة
-document.getElementById("ideaForm").addEventListener("submit", async function(event) {
-    event.preventDefault();
-    console.log("Form submitted");
-    
-    const ideaTitle = document.getElementById("ideaTitle").value.trim();
-    const ideaDes = document.getElementById("ideaDes").value.trim();
-    const domain = document.getElementById("domain").value;
+  const title = document.getElementById("ideaTitle").value.trim();
+  const description = document.getElementById("ideaDes").value.trim();
+  const domainValue = document.getElementById("domain").value;
 
-    if (ideaTitle === "" || ideaDes === "" || domain === "") {
-        alert("! يرجى التأكد من ملء جميع الحقول");
-        return;
-    }
+  const userRef = doc(db, "users", currentUser.uid);
+  const userSnap = await getDoc(userRef);
+  const userData = userSnap.exists() ? userSnap.data() : {};
 
-    // ✅ التأكد من أن المستخدم مسجل دخول
-    if (!currentUser) {
-        alert("يجب تسجيل الدخول لإضافة فكرة!");
-        return;
-    }
-    
-    try {
-        // محاولة الحصول على بيانات المستخدم المخزنة في قاعدة البيانات
-        const userRef = ref(db, `users/${currentUser.uid}`);
-        const userSnapshot = await get(userRef);
-        
-        // إعداد البيانات الافتراضية للمستخدم
-        let userData = {
-            displayName: currentUser.displayName || "مستخدم",
-            photoURL: currentUser.photoURL || "images/default-profile.png"
-        };
+  const idea = {
+    title,
+    description,
+    domain: domainValue,
+    userId: currentUser.uid,
+    username: userData.username || currentUser.displayName || "مستخدم",
+    userProfilePic: userData.profilePicture || currentUser.photoURL || "images/default-profile.png",
+    createdAt: serverTimestamp()
+  };
 
-        console.log("Initial user data from auth:", userData);
-
-        // إذا تم العثور على بيانات المستخدم في قاعدة البيانات، نستخدمها
-        if (userSnapshot.exists()) {
-            const fetchedUserData = userSnapshot.val();
-            console.log("User data from database:", fetchedUserData);
-            
-            // تحديث المعلومات الشخصية من قاعدة البيانات
-            if (fetchedUserData.username) userData.displayName = fetchedUserData.username;
-            else if (fetchedUserData.displayName) userData.displayName = fetchedUserData.displayName;
-            else if (fetchedUserData.name) userData.displayName = fetchedUserData.name;
-            
-            if (fetchedUserData.profilePicture) userData.photoURL = fetchedUserData.profilePicture;
-            else if (fetchedUserData.photoURL) userData.photoURL = fetchedUserData.photoURL;
-            else if (fetchedUserData.userProfilePic) userData.photoURL = fetchedUserData.userProfilePic;
-            else if (fetchedUserData.profilePic) userData.photoURL = fetchedUserData.profilePic;
-        }
-        
-        console.log("Final user data to save with idea:", userData);
-        
-        // إنشاء مرجع جديد للفكرة
-        const ideasRef = ref(db, "ideas");
-        const newIdeaRef = push(ideasRef);
-        const ideaId = newIdeaRef.key;
-        
-        const timestamp = new Date().toISOString();
-        
-        // بيانات الفكرة المحسنة مع معلومات المستخدم الكاملة
-        const ideaData = {
-            id: ideaId,
-            title: ideaTitle,
-            description: ideaDes,
-            domain: domain,
-            userId: currentUser.uid,
-            username: userData.displayName,
-            userProfilePic: userData.photoURL,  // استخدام نفس الحقل في كل مكان لتوحيد البيانات
-            timestamp: timestamp
-        };
-        
-        console.log("Saving idea with user data:", ideaData);
-        
-        // 1. حفظ الفكرة في قائمة الأفكار العامة
-        await set(newIdeaRef, ideaData);
-        console.log("Idea saved to main ideas list");
-        
-        // 2. حفظ مرجع للفكرة في ملف المستخدم
-        const userIdeasRef = ref(db, `users/${currentUser.uid}/ideas/${ideaId}`);
-        await set(userIdeasRef, {
-            id: ideaId,
-            title: ideaTitle,
-            description: ideaDes,
-            domain: domain,
-            date: new Date().toLocaleDateString(),
-            timestamp: timestamp,
-            username: userData.displayName,
-            userProfilePic: userData.photoURL
-        });
-        
-        console.log("Idea reference saved to user profile");
-        
-        // 3. تحديث معلومات المستخدم الأساسية إذا كانت غير موجودة أو ناقصة
-        if (!userSnapshot.exists() || !userSnapshot.val().username || !userSnapshot.val().profilePicture) {
-            const userUpdates = {};
-            if (!userSnapshot.exists() || !userSnapshot.val().username) {
-                userUpdates.username = userData.displayName;
-            }
-            if (!userSnapshot.exists() || !userSnapshot.val().profilePicture) {
-                userUpdates.profilePicture = userData.photoURL;
-            }
-            
-            if (Object.keys(userUpdates).length > 0) {
-                console.log("Updating user profile with:", userUpdates);
-                await update(userRef, userUpdates);
-                console.log("User profile updated");
-            }
-        }
-        
-        alert("! تمت إضافة الفكرة بنجاح");
-        document.getElementById("ideaForm").reset();
-        
-        // بدلاً من توجيه المستخدم إلى صفحة أخرى، نعود إلى الصفحة السابقة
-        history.back();
-        
-    } catch (error) {
-        console.error("Error saving idea:", error);
-        alert("حدث خطأ أثناء إضافة الفكرة، حاول مرة أخرى!");
-    }
+  try {
+    const ideaRef = await addDoc(collection(db, "ideas"), idea);
+    await updateDoc(userRef, { [`ideas.${ideaRef.id}`]: { title, domain: domainValue, createdAt: idea.createdAt } });
+    alert("تمت إضافة فكرتك!");
+    e.target.reset();
+    history.back();
+  } catch (err) {
+    console.error("Error adding idea:", err);
+    alert("حدث خطأ أثناء الإضافة.");
+  }
 });
 </script>
+
 </body>
 </html>
