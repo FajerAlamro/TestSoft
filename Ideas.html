@@ -409,221 +409,61 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
-import { getDatabase, ref, onValue, get } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
+import { getFirestore, collection, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
 
-// Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyC68KD9M_rGGOoyfQaW925LT8ipoj9jE44",
   authDomain: "wasl-523b4.firebaseapp.com",
-  databaseURL: "https://wasl-523b4-default-rtdb.firebaseio.com",
   projectId: "wasl-523b4",
   storageBucket: "wasl-523b4.firebasestorage.app",
   messagingSenderId: "410509570015",
-  appId: "1:410509570015:web:4c9a86048b3e8be0bd1e6a",
-  measurementId: "G-DD60XW5EVT"
+  appId: "1:410509570015:web:4c9a86048b3e8be0bd1e6a"
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
+const db = getFirestore(app);
 const auth = getAuth(app);
 
-// Get DOM elements
 const ideasContainer = document.getElementById("ideas-container");
 const noIdeasMessage = document.getElementById("no-ideas-message");
-const searchInput = document.getElementById("searchInput");
 
-// Check if user is logged in
-onAuthStateChanged(auth, (user) => {
-    if (user) {
-        console.log("User is signed in:", user.uid);
-        // You could load user-specific data here if needed
-    } else {
-        console.log("No user is signed in");
-        // Handle not logged in state if necessary
-    }
+onAuthStateChanged(auth, user => {
+  if (!user) window.location.href = "login.html";
 });
 
-// Search functionality
-if (searchInput) {
-    searchInput.addEventListener('input', function() {
-        const searchText = this.value.toLowerCase();
-        const ideaCards = document.querySelectorAll('.idea-card');
-        
-        ideaCards.forEach(card => {
-            const title = card.querySelector('.idea-content p:first-child').textContent.toLowerCase();
-            const field = card.querySelector('.idea-content p:nth-child(2)').textContent.toLowerCase();
-            
-            if (title.includes(searchText) || field.includes(searchText)) {
-                card.style.display = '';
-            } else {
-                card.style.display = 'none';
-            }
-        });
-    });
-}
+const ideasQuery = query(collection(db, "ideas"), orderBy("createdAt", "desc"));
 
-// Function to convert numbers to Arabic numerals
-function toArabicNumerals(number) {
-    const arabicDigits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
-    return number.toString().replace(/\d/g, match => arabicDigits[parseInt(match)]);
-}
+onSnapshot(ideasQuery, snapshot => {
+  ideasContainer.innerHTML = "";
+  if (snapshot.empty) {
+    noIdeasMessage.style.display = "block";
+    return;
+  }
+  noIdeasMessage.style.display = "none";
 
-// Generate random Hijri date
-function generateRandomHijriDate() {
-    const hijriYear = Math.random() < 0.5 ? 1444 : 1445;
-    const hijriMonth = Math.floor(Math.random() * 12) + 1;
-    const hijriDay = Math.floor(Math.random() * 29) + 1;
-    
-    const arabicYear = toArabicNumerals(hijriYear);
-    const arabicMonth = toArabicNumerals(hijriMonth);
-    const arabicDay = toArabicNumerals(hijriDay);
-    
-    return `${arabicYear}/${arabicMonth}/${arabicDay}`;
-}
-
-// Listen for changes in ideas database
-const ideasRef = ref(db, 'ideas');
-onValue(ideasRef, (snapshot) => {
-    console.log("🔥 Data from database:", snapshot.val());
-    
-    // Check if database is empty
-    if (!snapshot.exists()) {
-        console.log("No data in 'ideas' path");
-        noIdeasMessage.style.display = "block";
-        ideasContainer.innerHTML = '';
-        return;
-    }
-    
-    // Hide "no ideas" message and clear container
-    noIdeasMessage.style.display = "none";
-    ideasContainer.innerHTML = '';
-    
-    const ideas = snapshot.val();
-    
-    // Process each idea and add to UI
-    Object.keys(ideas).forEach((ideaId) => {
-        const idea = ideas[ideaId];
-        
-        if (!idea || !idea.title) {
-            console.log("Skipping incomplete idea:", ideaId);
-            return;
-        }
-        
-        // Print raw idea data for debugging
-        console.log(`Raw idea data for ${ideaId}:`, idea);
-        console.log(`Username field: "${idea.username}"`);
-        console.log(`Profile pic field: "${idea.userProfilePic}"`);
-        
-        // Process idea with user data
-        processIdeaWithUserData(idea, ideaId);
-    });
-});
-
-// Process idea with user data
-async function processIdeaWithUserData(idea, ideaId) {
-    // استخراج معلومات المستخدم من الفكرة مباشرة
-    const userId = idea.userId;
-    console.log(`Processing idea "${idea.title}" for user: ${userId}`);
-    
-    // استخدام البيانات المخزنة في الفكرة أولاً
-    let displayName = idea.username || "مستخدم مجهول";
-    let photoURL = idea.userProfilePic || "images/default-profile.png";
-    
-    console.log("Initial user data from idea:", { displayName, photoURL });
-    
-    // محاولة الحصول على بيانات إضافية من ملف المستخدم إذا كانت البيانات غير متوفرة
-    if (userId && (displayName === "مستخدم مجهول" || photoURL === "images/default-profile.png")) {
-        try {
-            console.log(`Fetching additional user data for ${userId}...`);
-            const userRef = ref(db, `users/${userId}`);
-            const userSnapshot = await get(userRef);
-            
-            if (userSnapshot.exists()) {
-                const userData = userSnapshot.val();
-                console.log("User data found:", userData);
-                
-                // تحديث البيانات فقط إذا كانت غير متوفرة في الفكرة
-                if (displayName === "مستخدم مجهول") {
-                    displayName = userData.username || userData.displayName || userData.name || displayName;
-                }
-                
-                if (photoURL === "images/default-profile.png") {
-                    photoURL = userData.profilePicture || userData.photoURL || userData.userProfilePic || photoURL;
-                }
-                
-                console.log(`User data updated to: ${displayName}, ${photoURL}`);
-                
-                // إذا وجدنا بيانات جديدة في ملف المستخدم، لكنها غير موجودة في الفكرة
-                // يمكن تحديث الفكرة في قاعدة البيانات (اختياري)
-                // لا نقوم بها هنا لكن يمكن إضافتها إذا كنت ترغب
-            } else {
-                console.log(`No data found for user: ${userId}`);
-            }
-        } catch (error) {
-            console.error("Error fetching user data:", error);
-        }
-    }
-    
-    // Generate random Hijri date
-    const hijriDate = generateRandomHijriDate();
-    
-    // Create card
-    const ideaCard = document.createElement("div");
-    ideaCard.classList.add("idea-card");
-    ideaCard.dataset.id = ideaId;
-    
-    // Create profile link
-    const profileLink = userId ? `account1.html?id=${userId}` : "account1.html";
-    
-    // Final data check and default to placeholders if still missing
-    if (!displayName || displayName === "") displayName = "مستخدم مجهول";
-    if (!photoURL || photoURL === "") photoURL = "images/default-profile.png";
-    
-    // Debug output before creating card
-    console.log(`Creating card for idea: ${idea.title}`);
-    console.log(`Final user data: ${displayName} (${userId})`);
-    console.log(`Final photo URL: ${photoURL}`);
-    
-    // Create card HTML with error handling for image
-    ideaCard.innerHTML = `
-        <div class="profile">
-            <a href="${profileLink}" class="profile-link" onclick="event.stopPropagation();">
-                <img src="${photoURL}" alt="${displayName}" onerror="this.src='images/default-profile.png'; console.log('Image failed to load, using default');">
-            </a>
-            <p class="creator">${displayName}</p>
-        </div>
-        <div class="idea-content">
-            <p><strong>${idea.title || "بدون عنوان"}</strong></p>
-            <p>مجال الفكرة: ${idea.domain || "غير محدد"}</p>
-            <p>${hijriDate}</p>
-        </div>
+  snapshot.docs.forEach(doc => {
+    const idea = doc.data();
+    const card = document.createElement("div");
+    card.className = "idea-card";
+    card.innerHTML = `
+      <div class="profile">
+        <a href="account1.html?id=${idea.userId}" class="profile-link">
+          <img src="${idea.userProfilePic}" alt="${idea.username}" onerror="this.src='images/default-profile.png'">
+        </a>
+        <p class="creator">${idea.username}</p>
+      </div>
+      <div class="idea-content">
+        <p><strong>${idea.title}</strong></p>
+        <p>مجال الفكرة: ${idea.domain}</p>
+        <p>${new Date(idea.createdAt.toDate()).toLocaleDateString('ar-SA')}</p>
+      </div>
     `;
-    
-    // Add click event
-    ideaCard.addEventListener('click', () => {
-        window.location.href = `ideaDetails.html?id=${ideaId}`;
-    });
-    
-    // Add card to container
-    ideasContainer.appendChild(ideaCard);
-}
-
-// Define toggleMenu function for global use
-window.toggleMenu = function() {
-    const menuOverlay = document.getElementById("menuOverlay");
-    if (menuOverlay) {
-        menuOverlay.classList.toggle("active");
-        const hamburgerIcon = document.getElementById("hamburgerIcon");
-        const closeIcon = document.getElementById("closeIcon");
-        
-        if (hamburgerIcon && closeIcon) {
-            hamburgerIcon.classList.toggle("hidden");
-            closeIcon.classList.toggle("visible");
-        }
-    }
-};
+    card.addEventListener("click", ()=> window.location.href = `ideaDetails.html?id=${doc.id}`);
+    ideasContainer.appendChild(card);
+  });
+});
 </script>
+
 </body>
 </html>
