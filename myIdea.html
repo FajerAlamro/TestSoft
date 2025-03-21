@@ -209,40 +209,52 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
 import { getFirestore, collection, addDoc, doc, updateDoc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
-import { getStorage, ref as storageRef, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-storage.js";
+import { getStorage, ref as storageRef, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-storage.js"; // ✅ لازم
 
-const firebaseConfig = {
-  apiKey: "AIzaSyC68KD9M_rGGOoyfQaW925LT8ipoj9jE44",
-  authDomain: "wasl-523b4.firebaseapp.com",
-  projectId: "wasl-523b4",
-  storageBucket: "wasl-523b4.firebasestorage.app",
-  messagingSenderId: "410509570015",
-  appId: "1:410509570015:web:4c9a86048b3e8be0bd1e6a"
-};
-
+const firebaseConfig = { /* ... */ };
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 const storage = getStorage(app);
 
 let currentUser = null;
-onAuthStateChanged(auth, user => currentUser = user);
+onAuthStateChanged(auth, user => {
+  currentUser = user;
+  console.log("🔔 currentUser:", user);
+});
 
-document.getElementById("ideaForm").addEventListener("submit", async e => {
+const form = document.getElementById("ideaForm");
+if (!form) console.error("🔴 لا يوجد form بالـ id الصحيح (ideaForm)");
+
+form.addEventListener("submit", async e => {
+  console.log("💥 Submit clicked");
   e.preventDefault();
-  if (!currentUser) return alert("يجب تسجيل الدخول");
 
-  const title = document.getElementById("ideaTitle").value.trim();
-  const description = document.getElementById("ideaDes").value.trim();
-  const domainValue = document.getElementById("domain").value;
+  if (!currentUser) {
+    alert("يجب تسجيل الدخول");
+    return;
+  }
+
+  const title = document.getElementById("ideaTitle")?.value.trim() || "";
+  const description = document.getElementById("ideaDes")?.value.trim() || "";
+  const domainValue = document.getElementById("domain")?.value || "";
+
+  if (!title || !description || !domainValue) {
+    alert("🔴 تأكد من ملء جميع الحقول");
+    return;
+  }
 
   const userRef = doc(db, "users", currentUser.uid);
   const userSnap = await getDoc(userRef);
   const userData = userSnap.exists() ? userSnap.data() : {};
 
-  // Download URL للصورة الافتراضية من Storage
   const defaultPicRef = storageRef(storage, "profileImages/default-profile.png");
-  const defaultPicUrl = await getDownloadURL(defaultPicRef);
+  let defaultPicUrl = "";
+  try {
+    defaultPicUrl = await getDownloadURL(defaultPicRef);
+  } catch (err) {
+    console.error("🔴 خطأ جلب defaultPicUrl:", err);
+  }
 
   const idea = {
     title,
@@ -256,16 +268,18 @@ document.getElementById("ideaForm").addEventListener("submit", async e => {
 
   try {
     const ideaRef = await addDoc(collection(db, "ideas"), idea);
+    console.log("✅ Idea added:", ideaRef.id);
     await updateDoc(userRef, { [`ideas.${ideaRef.id}`]: { title, domain: domainValue, createdAt: idea.createdAt } });
     alert("تمت إضافة فكرتك!");
-    e.target.reset();
+    form.reset();
     history.back();
   } catch (err) {
-    console.error("Error adding idea:", err);
+    console.error("🔴 Error adding idea:", err);
     alert("حدث خطأ أثناء الإضافة.");
   }
 });
 </script>
+
 
 
 
