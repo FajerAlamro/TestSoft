@@ -267,18 +267,31 @@ document.getElementById("ideaForm").addEventListener("submit", async function(ev
         const userRef = ref(db, `users/${currentUser.uid}`);
         const userSnapshot = await get(userRef);
         
-        // Make sure you're properly getting user data from Firebase Auth and/or Firestore
+        // إعداد البيانات الافتراضية للمستخدم
         let userData = {
             displayName: currentUser.displayName || "مستخدم",
             photoURL: currentUser.photoURL || "images/default-profile.png"
         };
 
-        // If user data exists in the database, update the values
+        console.log("Initial user data from auth:", userData);
+
+        // إذا تم العثور على بيانات المستخدم في قاعدة البيانات، نستخدمها
         if (userSnapshot.exists()) {
             const fetchedUserData = userSnapshot.val();
+            console.log("User data from database:", fetchedUserData);
+            
+            // تحديث المعلومات الشخصية من قاعدة البيانات
             if (fetchedUserData.username) userData.displayName = fetchedUserData.username;
+            else if (fetchedUserData.displayName) userData.displayName = fetchedUserData.displayName;
+            else if (fetchedUserData.name) userData.displayName = fetchedUserData.name;
+            
             if (fetchedUserData.profilePicture) userData.photoURL = fetchedUserData.profilePicture;
+            else if (fetchedUserData.photoURL) userData.photoURL = fetchedUserData.photoURL;
+            else if (fetchedUserData.userProfilePic) userData.photoURL = fetchedUserData.userProfilePic;
+            else if (fetchedUserData.profilePic) userData.photoURL = fetchedUserData.profilePic;
         }
+        
+        console.log("Final user data to save with idea:", userData);
         
         // إنشاء مرجع جديد للفكرة
         const ideasRef = ref(db, "ideas");
@@ -295,9 +308,11 @@ document.getElementById("ideaForm").addEventListener("submit", async function(ev
             domain: domain,
             userId: currentUser.uid,
             username: userData.displayName,
-            userProfilePic: userData.photoURL,  // تغيير اسم الحقل ليتطابق مع الاسم المستخدم في عرض الأفكار
+            userProfilePic: userData.photoURL,  // استخدام نفس الحقل في كل مكان لتوحيد البيانات
             timestamp: timestamp
         };
+        
+        console.log("Saving idea with user data:", ideaData);
         
         // 1. حفظ الفكرة في قائمة الأفكار العامة
         await set(newIdeaRef, ideaData);
@@ -309,14 +324,31 @@ document.getElementById("ideaForm").addEventListener("submit", async function(ev
             id: ideaId,
             title: ideaTitle,
             description: ideaDes,
-            domain: domain,            // استخدام domain بدلاً من category لتوحيد المصطلحات
+            domain: domain,
             date: new Date().toLocaleDateString(),
             timestamp: timestamp,
             username: userData.displayName,
-            userProfilePic: userData.photoURL  // تغيير اسم الحقل ليتطابق مع الاسم المستخدم في عرض الأفكار
+            userProfilePic: userData.photoURL
         });
         
         console.log("Idea reference saved to user profile");
+        
+        // 3. تحديث معلومات المستخدم الأساسية إذا كانت غير موجودة أو ناقصة
+        if (!userSnapshot.exists() || !userSnapshot.val().username || !userSnapshot.val().profilePicture) {
+            const userUpdates = {};
+            if (!userSnapshot.exists() || !userSnapshot.val().username) {
+                userUpdates.username = userData.displayName;
+            }
+            if (!userSnapshot.exists() || !userSnapshot.val().profilePicture) {
+                userUpdates.profilePicture = userData.photoURL;
+            }
+            
+            if (Object.keys(userUpdates).length > 0) {
+                console.log("Updating user profile with:", userUpdates);
+                await update(userRef, userUpdates);
+                console.log("User profile updated");
+            }
+        }
         
         alert("! تمت إضافة الفكرة بنجاح");
         document.getElementById("ideaForm").reset();
