@@ -205,7 +205,6 @@
             <button type="reset">إعادة تعيين</button>
         </form>
     </main>
-
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
 import { getFirestore, collection, addDoc, doc, updateDoc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
@@ -241,9 +240,9 @@ document.getElementById("ideaForm").addEventListener("submit", async e => {
   const userSnap = await getDoc(userRef);
   const userData = userSnap.exists() ? userSnap.data() : {};
 
-  // Download URL للصورة الافتراضية من Storage
-  const defaultPicRef = storageRef(storage, "profileImages/default-profile.png");
-  const defaultPicUrl = await getDownloadURL(defaultPicRef);
+  // جلب رابط التنزيل للصورة الافتراضية من Storage
+  const defaultRef = storageRef(storage, "profileImages/default-profile.png");
+  const defaultPicUrl = await getDownloadURL(defaultRef);
 
   const idea = {
     title,
@@ -267,6 +266,7 @@ document.getElementById("ideaForm").addEventListener("submit", async e => {
   }
 });
 </script>
+
 
 
 </body>
