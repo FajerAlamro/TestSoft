@@ -409,7 +409,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
-import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
+import { getDatabase, ref, onValue, get } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
 
 // 🔥 1. إعداد Firebase
@@ -488,9 +488,29 @@ function formatDateIEEE(timestamp) {
     return `IEEE/${month}/${day}`;
 }
 
+// دالة لجلب بيانات المستخدم من قاعدة البيانات
+async function getUserData(userId) {
+    if (!userId) return null;
+    
+    try {
+        const userRef = ref(db, `users/${userId}`);
+        const userSnapshot = await get(userRef);
+        
+        if (userSnapshot.exists()) {
+            return userSnapshot.val();
+        } else {
+            console.log(`لا توجد بيانات للمستخدم: ${userId}`);
+            return null;
+        }
+    } catch (error) {
+        console.error("خطأ في جلب بيانات المستخدم:", error);
+        return null;
+    }
+}
+
 // مراقبة قاعدة البيانات والتحديث تلقائيًا - استخدام Realtime Database
 const ideasRef = ref(db, 'ideas');
-onValue(ideasRef, (snapshot) => {
+onValue(ideasRef, async (snapshot) => {
     console.log("🔥 البيانات القادمة من الداتابيس:", snapshot.val()); // طباعة البيانات في الكونسول
     
     // التحقق إذا كانت قاعدة البيانات فارغة
@@ -510,7 +530,7 @@ onValue(ideasRef, (snapshot) => {
     const ideas = snapshot.val();
     
     // التكرار على كل فكرة في قاعدة البيانات
-    Object.keys(ideas).forEach((ideaId) => {
+    for (const ideaId of Object.keys(ideas)) {
         const idea = ideas[ideaId];
         
         console.log("معالجة الفكرة:", ideaId, idea); // للتصحيح
@@ -518,27 +538,36 @@ onValue(ideasRef, (snapshot) => {
         // التحقق من وجود الفكرة وعنوانها
         if (!idea || !idea.title) {
             console.log("تخطي فكرة غير مكتملة:", ideaId);
-            return; // تخطي أي فكرة غير مكتملة
+            continue; // تخطي أي فكرة غير مكتملة
+        }
+        
+        // جلب بيانات المستخدم المنشئ للفكرة
+        let userData = null;
+        if (idea.userId) {
+            userData = await getUserData(idea.userId);
         }
         
         const ideaCard = document.createElement("div");
         ideaCard.classList.add("idea-card");
         ideaCard.dataset.id = ideaId; // حفظ معرف الفكرة في البطاقة
 
-        // استخدام أسماء الحقول الصحيحة من قاعدة البيانات
-        const creatorName = idea.username || "مستخدم مجهول";
+        // استخدام بيانات المستخدم إذا وجدت، وإلا استخدم البيانات الافتراضية
+        const creatorName = userData?.displayName || idea.username || "مستخدم مجهول";
         const ideaTitle = idea.title || "بدون عنوان";
         const ideaField = idea.domain || "غير محدد";
         
+        // استخدام الصورة الشخصية للمستخدم إذا وجدت، وإلا استخدم الصورة الافتراضية
+        const userProfilePic = userData?.photoURL || "images/default-profile.png";
+        
+        // إنشاء رابط للملف الشخصي يحتوي على معرف المستخدم
+        const profileLink = idea.userId ? `account1.html?id=${idea.userId}` : "account1.html";
+
         // تنسيق التاريخ بالشكل المطلوب
         const formattedDate = formatDateIEEE(idea.timestamp);
-        
-        // لا توجد صورة ملف شخصي في البيانات، لذا استخدم صورة افتراضية
-        const userProfilePic = "images/default-profile.png"; // استخدام الصورة الافتراضية دائمًا
 
         ideaCard.innerHTML = `
             <div class="profile">
-                <a href="account1.html" class="profile-link" onclick="event.stopPropagation();">
+                <a href="${profileLink}" class="profile-link" onclick="event.stopPropagation();">
                     <img src="${userProfilePic}" alt="${creatorName}">
                 </a>
                 <p class="creator">${creatorName}</p>
@@ -557,7 +586,7 @@ onValue(ideasRef, (snapshot) => {
 
         // إضافة البطاقة إلى حاوية الأفكار
         ideasContainer.appendChild(ideaCard);
-    });
+    }
 });
 
 // إضافة دالة toggleMenu للاستخدام العالمي
