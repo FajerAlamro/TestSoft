@@ -451,66 +451,18 @@ searchInput.addEventListener('input', function() {
     });
 });
 
-// دالة لتنسيق التاريخ بتنسيق IEEE/شهر/يوم
-function formatDateIEEE(timestamp) {
-    if (!timestamp) return "";
+// دالة لتوليد تاريخ هجري عشوائي في السنوات 1444 أو 1445
+function generateRandomHijriDate() {
+    const hijriYear = Math.random() < 0.5 ? 1444 : 1445;
+    const hijriMonth = Math.floor(Math.random() * 12) + 1; // شهر عشوائي من 1 إلى 12
+    const hijriDay = Math.floor(Math.random() * 29) + 1; // يوم عشوائي من 1 إلى 29
     
-    // تحويل الطابع الزمني إلى كائن تاريخ
-    let date;
-    if (typeof timestamp === 'string') {
-        // إذا كان الطابع الزمني هو سلسلة نصية، حاول تحويله
-        if (timestamp.includes('T') || timestamp.includes('-')) {
-            // ISO format: "2023-03-29T12:34:56" or "2023-03-29"
-            date = new Date(timestamp);
-        } else if (!isNaN(timestamp)) {
-            // Unix timestamp as string
-            date = new Date(parseInt(timestamp));
-        } else {
-            return timestamp; // إرجاع النص الأصلي إذا كان بتنسيق غير معروف
-        }
-    } else if (typeof timestamp === 'number') {
-        // Unix timestamp as number
-        date = new Date(timestamp);
-    } else {
-        return ""; // إرجاع فارغ إذا كان بتنسيق غير معروف
-    }
-    
-    // التحقق من صلاحية التاريخ
-    if (isNaN(date.getTime())) {
-        return timestamp; // إرجاع النص الأصلي إذا كان التاريخ غير صالح
-    }
-    
-    // الحصول على اليوم والشهر
-    const day = date.getDate();
-    const month = date.getMonth() + 1; // الشهور تبدأ من 0، لذا نضيف 1
-    
-    // تنسيق النص النهائي
-    return `IEEE/${month}/${day}`;
-}
-
-// دالة لجلب بيانات المستخدم من قاعدة البيانات
-async function getUserData(userId) {
-    if (!userId) return null;
-    
-    try {
-        const userRef = ref(db, `users/${userId}`);
-        const userSnapshot = await get(userRef);
-        
-        if (userSnapshot.exists()) {
-            return userSnapshot.val();
-        } else {
-            console.log(`لا توجد بيانات للمستخدم: ${userId}`);
-            return null;
-        }
-    } catch (error) {
-        console.error("خطأ في جلب بيانات المستخدم:", error);
-        return null;
-    }
+    return `${hijriYear}/${hijriMonth}/${hijriDay}`;
 }
 
 // مراقبة قاعدة البيانات والتحديث تلقائيًا - استخدام Realtime Database
 const ideasRef = ref(db, 'ideas');
-onValue(ideasRef, async (snapshot) => {
+onValue(ideasRef, (snapshot) => {
     console.log("🔥 البيانات القادمة من الداتابيس:", snapshot.val()); // طباعة البيانات في الكونسول
     
     // التحقق إذا كانت قاعدة البيانات فارغة
@@ -530,7 +482,7 @@ onValue(ideasRef, async (snapshot) => {
     const ideas = snapshot.val();
     
     // التكرار على كل فكرة في قاعدة البيانات
-    for (const ideaId of Object.keys(ideas)) {
+    Object.keys(ideas).forEach((ideaId) => {
         const idea = ideas[ideaId];
         
         console.log("معالجة الفكرة:", ideaId, idea); // للتصحيح
@@ -538,32 +490,32 @@ onValue(ideasRef, async (snapshot) => {
         // التحقق من وجود الفكرة وعنوانها
         if (!idea || !idea.title) {
             console.log("تخطي فكرة غير مكتملة:", ideaId);
-            continue; // تخطي أي فكرة غير مكتملة
-        }
-        
-        // جلب بيانات المستخدم المنشئ للفكرة
-        let userData = null;
-        if (idea.userId) {
-            userData = await getUserData(idea.userId);
+            return; // تخطي أي فكرة غير مكتملة
         }
         
         const ideaCard = document.createElement("div");
         ideaCard.classList.add("idea-card");
         ideaCard.dataset.id = ideaId; // حفظ معرف الفكرة في البطاقة
 
-        // استخدام بيانات المستخدم إذا وجدت، وإلا استخدم البيانات الافتراضية
-        const creatorName = userData?.displayName || idea.username || "مستخدم مجهول";
+        // استخدام البيانات من الفكرة نفسها
+        const creatorName = idea.username || "مستخدم مجهول";
         const ideaTitle = idea.title || "بدون عنوان";
         const ideaField = idea.domain || "غير محدد";
+        const userId = idea.userId || null;
         
-        // استخدام الصورة الشخصية للمستخدم إذا وجدت، وإلا استخدم الصورة الافتراضية
-        const userProfilePic = userData?.photoURL || "images/default-profile.png";
+        // توليد تاريخ هجري عشوائي
+        const randomHijriDate = generateRandomHijriDate();
         
-        // إنشاء رابط للملف الشخصي يحتوي على معرف المستخدم
-        const profileLink = idea.userId ? `account1.html?id=${idea.userId}` : "account1.html";
-
-        // تنسيق التاريخ بالشكل المطلوب
-        const formattedDate = formatDateIEEE(idea.timestamp);
+        // استخدام الصورة الافتراضية أو صورة المستخدم إذا كانت موجودة
+        let userProfilePic = "images/default-profile.png";
+        
+        // إذا كان هناك صورة في بيانات الفكرة، استخدمها
+        if (idea.userPhoto) {
+            userProfilePic = idea.userPhoto;
+        }
+        
+        // إنشاء رابط للملف الشخصي
+        const profileLink = userId ? `account1.html?id=${userId}` : "account1.html";
 
         ideaCard.innerHTML = `
             <div class="profile">
@@ -575,7 +527,7 @@ onValue(ideasRef, async (snapshot) => {
             <div class="idea-content">
                 <p><strong>${ideaTitle}</strong></p>
                 <p>مجال الفكرة: ${ideaField}</p>
-                <p>${formattedDate}</p>
+                <p>${randomHijriDate}</p>
             </div>
         `;
 
@@ -586,7 +538,7 @@ onValue(ideasRef, async (snapshot) => {
 
         // إضافة البطاقة إلى حاوية الأفكار
         ideasContainer.appendChild(ideaCard);
-    }
+    });
 });
 
 // إضافة دالة toggleMenu للاستخدام العالمي
