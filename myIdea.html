@@ -240,9 +240,9 @@ document.getElementById("ideaForm").addEventListener("submit", async e => {
   const userSnap = await getDoc(userRef);
   const userData = userSnap.exists() ? userSnap.data() : {};
 
-  // جلب رابط التنزيل للصورة الافتراضية من Storage
-  const defaultRef = storageRef(storage, "profileImages/default-profile.png");
-  const defaultPicUrl = await getDownloadURL(defaultRef);
+  // Download URL للصورة الافتراضية من Storage
+  const defaultPicRef = storageRef(storage, "profileImages/default-profile.png");
+  const defaultPicUrl = await getDownloadURL(defaultPicRef);
 
   const idea = {
     title,
@@ -266,6 +266,7 @@ document.getElementById("ideaForm").addEventListener("submit", async e => {
   }
 });
 </script>
+
 
 
 
