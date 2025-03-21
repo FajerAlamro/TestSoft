@@ -344,7 +344,6 @@ function confirmLogout() {
         </div>
     </div>
 
-
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
 import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
@@ -374,12 +373,12 @@ onSnapshot(collection(db, "ideas"), (snapshot) => {
 
     // التحقق إذا كانت قاعدة البيانات فارغة
     if (snapshot.empty || snapshot.docs.length === 0) {
-        noIdeasMessage.style.display = "block"; // عرض الجملة
-        ideasContainer.innerHTML = ''; // تأكد من أن حاوية البطاقات فارغة
-        return; // الخروج من الفنكشن بدون تحميل أي كارد
+        noIdeasMessage.style.display = "block"; // عرض رسالة "لا توجد أفكار"
+        ideasContainer.innerHTML = ''; // تفريغ حاوية البطاقات
+        return; // الخروج من الدالة
     }
 
-    // إخفاء الجملة لأن هناك أفكار فعلية
+    // إخفاء رسالة "لا توجد أفكار" لأن هناك أفكار فعلية
     noIdeasMessage.style.display = "none";
 
     // إفراغ حاوية البطاقات قبل إضافة البطاقات الجديدة
@@ -422,12 +421,13 @@ onSnapshot(collection(db, "ideas"), (snapshot) => {
             window.location.href = `ideaDetails.html?id=${ideaId}`;
         });
 
+        // إضافة البطاقة إلى حاوية الأفكار (ideas-container) وليس إلى main
         ideasContainer.appendChild(ideaCard);
     });
 });
 
-// إضافة وظيفة للقائمة
-function toggleMenu() {
+// إضافة دالة toggleMenu للاستخدام العالمي
+window.toggleMenu = function() {
     const menuOverlay = document.getElementById("menuOverlay");
     menuOverlay.classList.toggle("active");
     const hamburgerIcon = document.getElementById("hamburgerIcon");
@@ -435,13 +435,8 @@ function toggleMenu() {
     
     hamburgerIcon.classList.toggle("hidden");
     closeIcon.classList.toggle("visible");
-}
-
-// جعل الدالة متاحة عالميًا
-window.toggleMenu = toggleMenu;
-
-    </script>
-    
+};
+</script>
 
 </body>
 </html>
