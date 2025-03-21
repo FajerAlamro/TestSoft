@@ -162,6 +162,8 @@ body {
             height: 50px;
             display: block;
             margin: 10px auto;
+            border-radius: 50%;
+            object-fit: cover;
         }
 
         .profile-idea-title {
@@ -624,12 +626,23 @@ function loadUserIdeas(ideas) {
                     <img src="images/delete.png" alt="حذف" class="profile-icon close-icon">
                     <img src="images/update.png" alt="تحديث" class="profile-icon refresh-icon" onclick="window.location.href='updateIdea.html';">
                 </div>
+                <img src="${idea.userPhotoURL || 'images/default-profile.png'}" alt="صورة المستخدم" class="profile-idea-img">
                 <p class="profile-idea-title">${idea.title}</p>
-                <p class="profile-idea-field">مجال الفكرة: ${idea.category}</p>
-                <p class="profile-idea-date">${idea.date}</p>
+                <p class="profile-idea-field">مجال الفكرة: ${idea.category || idea.domain}</p>
+                <p class="profile-idea-date">${idea.date || new Date(idea.timestamp).toLocaleDateString()}</p>
             </div>
         `;
         ideasContainer.innerHTML += ideaElement;
+    });
+
+    // Add event listeners to the newly created delete icons
+    const deleteIcons = document.querySelectorAll(".close-icon");
+    deleteIcons.forEach(icon => {
+        icon.addEventListener("click", function() {
+            const ideaBox = this.closest(".profile-idea-box");
+            document.getElementById("delete-confirmation").style.display = "block";
+            currentIdeaBox = ideaBox;
+        });
     });
 }
 
