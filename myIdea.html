@@ -245,7 +245,7 @@ document.getElementById("ideaForm").addEventListener("submit", async e => {
     domain: domainValue,
     userId: currentUser.uid,
     username: userData.username || currentUser.displayName || "مستخدم",
-    userProfilePic: userData.profilePicture || currentUser.photoURL || "images/default-profile.png",
+    userProfilePic: userData.profilePicture || currentUser.photoURL || "/images/default-profile.png",
     createdAt: serverTimestamp()
   };
 
