@@ -514,19 +514,22 @@ onValue(ideasRef, (snapshot) => {
     });
 });
 
-// Process idea with user data
+// Process idea with user data - تم تحديثها للتعامل مع المعلومات الإضافية
 async function processIdeaWithUserData(idea, ideaId) {
-    // Extract user ID from idea
+    // استخراج معلومات المستخدم من الفكرة مباشرة
     const userId = idea.userId;
     console.log(`Processing idea "${idea.title}" for user: ${userId}`);
     
-    // Default data
+    // استخدام البيانات المخزنة في الفكرة إذا كانت متوفرة
     let displayName = idea.username || "مستخدم مجهول";
-    let photoURL = "images/default-profile.png";
+    let photoURL = idea.userPhotoURL || "images/default-profile.png";
     
-    // If there's a user ID, fetch their data
-    if (userId) {
+    console.log("Initial user data:", { displayName, photoURL });
+    
+    // محاولة الحصول على بيانات إضافية من ملف المستخدم إذا كانت البيانات المباشرة غير كاملة
+    if (userId && (!idea.userPhotoURL || !idea.username)) {
         try {
+            console.log("Fetching additional user data...");
             const userRef = ref(db, `users/${userId}`);
             const userSnapshot = await get(userRef);
             
@@ -534,9 +537,14 @@ async function processIdeaWithUserData(idea, ideaId) {
                 const userData = userSnapshot.val();
                 console.log("User data found:", userData);
                 
-                // Try all possible field names for name and photo
-                displayName = userData.displayName || userData.name || userData.username || displayName;
-                photoURL = userData.photoURL || userData.profilePic || userData.photoUrl || userData.avatar || photoURL;
+                // تحديث البيانات فقط إذا كانت غير متوفرة في الفكرة
+                if (!idea.username) {
+                    displayName = userData.displayName || userData.name || userData.username || displayName;
+                }
+                
+                if (!idea.userPhotoURL) {
+                    photoURL = userData.photoURL || userData.profilePic || userData.photoUrl || userData.avatar || photoURL;
+                }
                 
                 console.log(`User data updated: ${displayName}, ${photoURL}`);
             } else {
