@@ -645,23 +645,23 @@ body {
                 ideasContainer.innerHTML = "<p style='text-align: center; color: #666;'>حدث خطأ أثناء تحميل الأفكار.</p>";
             });
     }
-onAuthStateChanged(auth, async (user) => {
-    if (user) {
-        console.log("المستخدم المسجّل دخوله:", user.uid);
 
-        try {
-            const userRef = doc(db, "users", user.uid);
-            const userSnap = await getDoc(userRef);
+	  onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            console.log(" المستخدم المسجّل دخوله:", user.uid);
 
-            if (userSnap.exists()) {
-                const userData = userSnap.data();
-                console.log("البيانات المسترجعة من Firestore:", userData);
+            try {
+                const userRef = doc(db, "users", user.uid);
+                const userSnap = await getDoc(userRef);
 
-                // تحميل معلومات المستخدم
-                document.getElementById("username").textContent = userData.username || "مستخدم مجهول";
+                if (userSnap.exists()) {
+                    const userData = userSnap.data();
+                    console.log(" البيانات المسترجعة من Firestore:", userData);
 
-                // تحميل حسابات التواصل بشكل منفصل
-                const contactInfoPromise = new Promise((resolve) => {
+              
+                    document.getElementById("username").textContent = userData.username || "مستخدم مجهول";
+
+        
                     if (userData.contactInfo) {
                         document.getElementById("x-handle").textContent = userData.contactInfo.xHandle || "لم يتم الإضافة";
                         document.getElementById("linkedin-handle").textContent = userData.contactInfo.linkedinHandle || "لم يتم الإضافة";
@@ -669,48 +669,30 @@ onAuthStateChanged(auth, async (user) => {
                         document.getElementById("x-handle").textContent = "لم يتم الإضافة";
                         document.getElementById("linkedin-handle").textContent = "لم يتم الإضافة";
                     }
-                    resolve();
-                });
 
-                // تحميل صورة الملف الشخصي بشكل منفصل
-                const profileImgPromise = new Promise((resolve) => {
+            
                     const profileImg = document.getElementById("profile-img");
                     if (userData.profileImage) {
                         profileImg.src = userData.profileImage;
                     } else {
-                        profileImg.src = "images/default-avatar.png";
+                        profileImg.src = "images/default-avatar.png"; 
                     }
-                    resolve();
-                });
 
-                // تحميل الأفكار إذا كانت موجودة
-                const ideasPromise = new Promise((resolve) => {
-                    if (userData.ideas && userData.ideas.length > 0) {
-                        loadUserIdeas(userData.ideas);
-                    } else {
-                        const ideasContainer = document.querySelector(".profile-ideas-container");
-                        ideasContainer.innerHTML = "<p style='text-align: center; color: #666;'>لا توجد أفكار بعد.</p>";
-                    }
-                    resolve();
-                });
-
-                // استخدام Promise.all لضمان تحميل البيانات معًا
-                await Promise.all([contactInfoPromise, profileImgPromise, ideasPromise]);
-
-            } else {
-                console.error("لم يتم العثور على بيانات المستخدم.");
-                document.getElementById("username").textContent = "لم يتم العثور على البيانات.";
+                
+                    loadUserIdeas(userData.ideas || []);
+                } else {
+                    console.error(" لم يتم العثور على بيانات المستخدم.");
+                    document.getElementById("username").textContent = "لم يتم العثور على البيانات.";
+                }
+            } catch (error) {
+                console.error(" خطأ أثناء جلب البيانات:", error);
+                document.getElementById("username").textContent = "خطأ في تحميل البيانات.";
             }
-        } catch (error) {
-            console.error("خطأ أثناء جلب البيانات:", error);
-            document.getElementById("username").textContent = "خطأ في تحميل البيانات.";
+        } else {
+            console.warn("⚠ لا يوجد مستخدم مسجّل دخول، سيتم توجيهه إلى صفحة تسجيل الدخول.");
+            window.location.href = "login.html";
         }
-    } else {
-        console.warn("⚠ لا يوجد مستخدم مسجّل دخول، سيتم توجيهه إلى صفحة تسجيل الدخول.");
-        window.location.href = "login.html";
-    }
-});
-
+    });
 </script>
 
 
