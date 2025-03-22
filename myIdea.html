@@ -243,64 +243,77 @@
         profileImageElement.src = profilePic ? profilePic : "images/default-avatar.png";
     }
 
-    // دالة لتوليد تاريخ هجري عشوائي بين 1442 و 1446
-    function getRandomHijriDate() {
-        const startYear = 1442;
-        const endYear = 1446;
+   // دالة لتحويل الأرقام إلى الأرقام العربية
+function convertToArabicNumbers(number) {
+    const arabicNumbers = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+    return number.toString().split('').map(digit => arabicNumbers[digit]).join('');
+}
 
-        const randomYear = Math.floor(Math.random() * (endYear - startYear + 1)) + startYear;
-        const randomMonth = Math.floor(Math.random() * 12) + 1;
-        const randomDay = Math.floor(Math.random() * 29) + 1;
+// دالة لتوليد تاريخ هجري عشوائي بين 1442 و 1446
+function getRandomHijriDate() {
+    const startYear = 1442;
+    const endYear = 1446;
 
-        const hijriDate = new Date(20${randomYear}-0${randomMonth}-0${randomDay}T00:00:00Z); // تحويل إلى تاريخ ميلادي عشوائي
+    const randomYear = Math.floor(Math.random() * (endYear - startYear + 1)) + startYear;
+    const randomMonth = Math.floor(Math.random() * 12) + 1;
+    const randomDay = Math.floor(Math.random() * 29) + 1;
 
-        return hijriDate;
+    // تحويل الأرقام إلى أرقام عربية
+    const arabicYear = convertToArabicNumbers(randomYear);
+    const arabicMonth = convertToArabicNumbers(randomMonth);
+    const arabicDay = convertToArabicNumbers(randomDay);
+
+    // توليد التاريخ بشكل نصي باستخدام الأرقام العربية
+    const hijriDate = `${arabicDay}-${arabicMonth}-${arabicYear}`;
+
+    return hijriDate;
+}
+
+// عند إضافة فكرة جديدة
+document.getElementById("ideaForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    console.log("💥 Submit clicked");
+
+    if (!currentUser) return alert("يجب تسجيل الدخول");
+
+    const title = document.getElementById("ideaTitle").value.trim();
+    const description = document.getElementById("ideaDes").value.trim();
+    const domain = document.getElementById("domain").value;
+    if (!title || !description || !domain) return alert("املأ جميع الحقول");
+
+    const userRef = doc(db, "users", currentUser.uid);
+    const userSnap = await getDoc(userRef);
+    const userData = userSnap.exists() ? userSnap.data() : {};
+
+    // استخدم صورة البروفايل من مجموعة اليوزر أو الصورة في Auth أو الصورة الافتراضية
+    let userProfilePic = userData.profileImage || currentUser.photoURL || "images/default-profile.png";
+
+    const randomDate = getRandomHijriDate();  // توليد التاريخ العشوائي
+
+    const idea = {
+        title,
+        description,
+        domain,
+        userId: currentUser.uid,
+        username: userData.username || currentUser.displayName || "مستخدم",
+        userProfilePic, // هنا نضيف صورة البروفايل
+        createdAt: randomDate  // هنا نضع التاريخ العشوائي
+    };
+
+    try {
+        const docRef = await addDoc(collection(db, "ideas"), idea);
+        console.log("✅ Idea added:", docRef.id);
+        // تحديث الفكرة في Firestore
+        await updateDoc(userRef, { [`ideas.${docRef.id}`]: { title, domain, createdAt: idea.createdAt } });
+        alert("تمت إضافة فكرتك!");
+        e.target.reset();
+        history.back();
+    } catch (err) {
+        console.error("❌ Error adding idea:", err);
+        alert("حدث خطأ أثناء الإضافة.");
     }
+});
 
-    // عند إضافة فكرة جديدة
-    document.getElementById("ideaForm").addEventListener("submit", async (e) => {
-        e.preventDefault();
-        console.log("💥 Submit clicked");
-
-        if (!currentUser) return alert("يجب تسجيل الدخول");
-
-        const title = document.getElementById("ideaTitle").value.trim();
-        const description = document.getElementById("ideaDes").value.trim();
-        const domain = document.getElementById("domain").value;
-        if (!title || !description || !domain) return alert("املأ جميع الحقول");
-
-        const userRef = doc(db, "users", currentUser.uid);
-        const userSnap = await getDoc(userRef);
-        const userData = userSnap.exists() ? userSnap.data() : {};
-
-        // استخدم صورة البروفايل من مجموعة اليوزر أو الصورة في Auth أو الصورة الافتراضية
-        let userProfilePic = userData.profileImage || currentUser.photoURL || "images/default-profile.png";
-
-        const randomDate = getRandomHijriDate();  // توليد التاريخ العشوائي
-
-        const idea = {
-            title,
-            description,
-            domain,
-            userId: currentUser.uid,
-            username: userData.username || currentUser.displayName || "مستخدم",
-            userProfilePic, // هنا نضيف صورة البروفايل
-            createdAt: randomDate  // هنا نضع التاريخ العشوائي
-        };
-
-        try {
-            const docRef = await addDoc(collection(db, "ideas"), idea);
-            console.log("✅ Idea added:", docRef.id);
-            // تحديث الفكرة في Firestore
-            await updateDoc(userRef, { [ideas.${docRef.id}]: { title, domain, createdAt: idea.createdAt } });
-            alert("تمت إضافة فكرتك!");
-            e.target.reset();
-            history.back();
-        } catch (err) {
-            console.error("❌ Error adding idea:", err);
-            alert("حدث خطأ أثناء الإضافة.");
-        }
-    });
 </script>
 </body>
 </html>
