@@ -139,61 +139,60 @@ color: #09315D;
             <img src="images/favIcon.png" alt="المفضلة" class="fav-icon">
         </div>
 
-        <!-- هذه هي الأماكن التي سيتم تحديثها عبر JavaScript -->
-        <div class="input-box" id="idea-title">عنوان الفكرة: ...</div>
-        <div class="textarea-box" id="idea-description">وصف الفكرة: ...</div>
-        <div class="input-box" id="idea-date">تاريخ النشر: ...</div>
-        <div class="input-box" id="idea-domain">مجال الفكرة: ...</div>
+<!-- هذه هي الأماكن التي سيتم تحديثها عبر JavaScript -->
+<div class="input-box" id="idea-title">عنوان الفكرة: ...</div>
+<div class="textarea-box" id="idea-description">وصف الفكرة: ...</div>
+<div class="input-box" id="idea-date">تاريخ النشر: ...</div>
+<div class="input-box" id="idea-domain">مجال الفكرة: ...</div>
 
+
+       
         <button class="investment-btn">طلب استثمار</button>
     </div>
 
 <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
-        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyC68KD9M_rGGOoyfQaW925LT8ipoj9jE44",
-            authDomain: "wasl-523b4.firebaseapp.com",
-            projectId: "wasl-523b4",
-            storageBucket: "wasl-523b4.appspot.com",
-            messagingSenderId: "410509570015",
-            appId: "1:410509570015:web:4c9a86048b3e8be0bd1e6a"
-        };
+    const firebaseConfig = {
+        apiKey: "AIzaSyC68KD9M_rGGOoyfQaW925LT8ipoj9jE44",
+        authDomain: "wasl-523b4.firebaseapp.com",
+        projectId: "wasl-523b4",
+        storageBucket: "wasl-523b4.firebasestorage.app",
+        messagingSenderId: "410509570015",
+        appId: "1:410509570015:web:4c9a86048b3e8be0bd1e6a"
+    };
 
-        // تهيئة Firebase
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-        // جلب معرّف الفكرة من الرابط
-const urlParams = new URLSearchParams(window.location.search);
-const ideaId = urlParams.get('id'); // الحصول على الـ id من الرابط
+    // جلب معرّف الفكرة من الرابط
+    const urlParams = new URLSearchParams(window.location.search);
+    const ideaId = urlParams.get('id'); // الحصول على الـ id من الرابط
 
-// استخدم الـ id للوصول إلى الفكرة وعرض التفاصيل
+    // استخدم الـ id للوصول إلى الفكرة وعرض التفاصيل
+    if (ideaId) {
+        // جلب تفاصيل الفكرة من Firestore باستخدام المعرف
+        const ideaRef = doc(db, "ideas", ideaId);
+        getDoc(ideaRef).then(ideaSnap => {
+            if (ideaSnap.exists()) {
+                const ideaData = ideaSnap.data();
+                // عرض البيانات مثل العنوان والوصف ومجال الفكرة
+                document.querySelector("#idea-title").textContent = ideaData.title;
+                document.querySelector("#idea-description").textContent = ideaData.description;
+                document.querySelector("#idea-domain").textContent = ideaData.domain;
+                document.querySelector("#idea-date").textContent = new Date(ideaData.createdAt.toDate()).toLocaleDateString('ar-SA');
+                // يمكنك إضافة المزيد من التفاصيل هنا
+            } else {
+                console.error("❌ لا توجد فكرة بهذا المعرف");
+            }
+        }).catch(error => {
+            console.error("❌ حدث خطأ أثناء جلب تفاصيل الفكرة:", error);
+        });
+    } else {
+        console.log("❌ معرّف الفكرة غير موجود في الرابط");
+    }
+</script>
 
-
-if (ideaId) {
-    // جلب تفاصيل الفكرة من Firestore باستخدام المعرف
-    const ideaRef = doc(db, "ideas", ideaId);
-    getDoc(ideaRef).then(ideaSnap => {
-        if (ideaSnap.exists()) {
-            const ideaData = ideaSnap.data();
-            // عرض البيانات مثل العنوان والوصف ومجال الفكرة
-            document.querySelector(".idea-title").textContent = ideaData.title;
-            document.querySelector(".idea-description").textContent = ideaData.description;
-            document.querySelector(".idea-domain").textContent = ideaData.domain;
-            document.querySelector(".idea-date").textContent = new Date(ideaData.createdAt.toDate()).toLocaleDateString('ar-SA');
-            // يمكنك إضافة المزيد من التفاصيل هنا
-        } else {
-            console.error("❌ لا توجد فكرة بهذا المعرف");
-        }
-    }).catch(error => {
-        console.error("❌ حدث خطأ أثناء جلب تفاصيل الفكرة:", error);
-    });
-} else {
-    console.log("❌ معرّف الفكرة غير موجود في الرابط");
-}
-
-    </script>
 </body>
 </html>
