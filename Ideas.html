@@ -206,68 +206,67 @@
         .IdeaLink {
             text-decoration: none !important;
         }
-    .modal {
-    display: none; 
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 280px;
-    background: rgba(0, 0, 0, 0.8); 
-    color: white;
-    border-radius: 10px;
-    text-align: center;
-    padding: 15px;
-    z-index: 1000;
-    box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.3);
-}
+        .modal {
+            display: none; 
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 280px;
+            background: rgba(0, 0, 0, 0.8); 
+            color: white;
+            border-radius: 10px;
+            text-align: center;
+            padding: 15px;
+            z-index: 1000;
+            box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.3);
+        }
 
-.modal-content {
-    background: #2a2d34;
-    padding: 15px;
-    border-radius: 10px;
-}
+        .modal-content {
+            background: #2a2d34;
+            padding: 15px;
+            border-radius: 10px;
+        }
 
-.modal-content h2 {
-    font-size: 14px;
-    font-weight: bold;
-    color: #ffffff;
-    margin-bottom: 5px;
-}
+        .modal-content h2 {
+            font-size: 14px;
+            font-weight: bold;
+            color: #ffffff;
+            margin-bottom: 5px;
+        }
 
-.modal-content p {
-    font-size: 12px;
-    color: #ccc;
-    margin-bottom: 15px;
-}
+        .modal-content p {
+            font-size: 12px;
+            color: #ccc;
+            margin-bottom: 15px;
+        }
 
-.modal-buttons {
-    display: flex;
-    justify-content: space-between;
-    gap: 10px;
-}
+        .modal-buttons {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+        }
 
-.modal-buttons button {
-    flex: 1;
-    padding: 8px 0;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 12px;
-}
+        .modal-buttons button {
+            flex: 1;
+            padding: 8px 0;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+        }
 
-.modal-buttons button:last-child {
-    background: #0c2340;
-    color: white;
-    font-weight: bold;
-}
+        .modal-buttons button:last-child {
+            background: #0c2340;
+            color: white;
+            font-weight: bold;
+        }
 
-.modal-buttons button:first-child {
-    background: transparent;
-    border: 1px solid #ccc;
-    color: #ccc;
-}
-
+        .modal-buttons button:first-child {
+            background: transparent;
+            border: 1px solid #ccc;
+            color: #ccc;
+        }
         
         /* أنماط نموذج إضافة فكرة */
         .input-container {
@@ -343,8 +342,8 @@
     </style>
 
     <script>
-        
-      function toggleMenu() {
+
+         function toggleMenu() {
             var menu = document.getElementById("menuOverlay");
             var hamburgerIcon = document.querySelector("#hamburgerIcon");
 
@@ -486,10 +485,10 @@ onSnapshot(ideasQuery, snapshot => {
     ideasContainer.appendChild(card);
   });
 });
-
 </script>
 
 
 </body>
 </html>
+
 
