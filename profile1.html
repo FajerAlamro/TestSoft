@@ -661,30 +661,38 @@ onAuthStateChanged(auth, async (user) => {
                 // تحميل معلومات المستخدم
                 document.getElementById("username").textContent = userData.username || "مستخدم مجهول";
                 const profileImg = document.getElementById("profile-img");
-                if (userData.profileImage) {
-                    profileImg.src = userData.profileImage;
-                } else {
-                    profileImg.src = "images/default-avatar.png"; 
-                }
+                profileImg.src = userData.profileImage || "images/default-avatar.png"; 
 
-                // تحديث معلومات التواصل
-if (userData.linkedinHandle) {
-    document.getElementById("linkedin-handle").textContent = userData.linkedinHandle;
-    document.getElementById("linkedin-handle").href = `https://www.linkedin.com/in/${userData.linkedinHandle}`;
-} else {
-    document.getElementById("linkedin-handle").textContent = "تحميل...";
-}
+                // تحميل معلومات التواصل
+                const linkedinPromise = new Promise((resolve) => {
+                    if (userData.linkedinHandle) {
+                        document.getElementById("linkedin-handle").textContent = userData.linkedinHandle;
+                        document.getElementById("linkedin-handle").href = `https://www.linkedin.com/in/${userData.linkedinHandle}`;
+                    } else {
+                        document.getElementById("linkedin-handle").textContent = "تحميل...";
+                    }
+                    resolve();
+                });
 
-if (userData.xHandle) {
-    document.getElementById("x-handle").textContent = userData.xHandle;
-    document.getElementById("x-handle").href = `https://twitter.com/${userData.xHandle}`;
-} else {
-    document.getElementById("x-handle").textContent = "تحميل...";
-}
+                const twitterPromise = new Promise((resolve) => {
+                    if (userData.xHandle) {
+                        document.getElementById("x-handle").textContent = userData.xHandle;
+                        document.getElementById("x-handle").href = `https://twitter.com/${userData.xHandle}`;
+                    } else {
+                        document.getElementById("x-handle").textContent = "تحميل...";
+                    }
+                    resolve();
+                });
 
+                // تحميل الأفكار
+                const ideasPromise = new Promise((resolve) => {
+                    loadUserIdeas(user.uid);
+                    resolve();
+                });
 
-                // تحميل الأفكار التي أضافها المستخدم
-                loadUserIdeas(user.uid); // تم تعديلها لتأخذ معرف المستخدم
+                // استخدم Promise.all لضمان تنفيذ جميع العمليات بشكل متزامن
+                await Promise.all([linkedinPromise, twitterPromise, ideasPromise]);
+
             } else {
                 console.error("لم يتم العثور على بيانات المستخدم.");
                 document.getElementById("username").textContent = "لم يتم العثور على البيانات.";
@@ -698,6 +706,7 @@ if (userData.xHandle) {
         window.location.href = "login.html";
     }
 });
+
 
 </script>
 
