@@ -207,7 +207,7 @@
     </main>
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
-    import { getFirestore, collection, addDoc, doc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, doc, updateDoc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
 
     const firebaseConfig = {
@@ -243,34 +243,7 @@
         profileImageElement.src = profilePic ? profilePic : "images/default-avatar.png";
     }
 
-   // دالة لتحويل الأرقام إلى الأرقام العربية
-function convertToArabicNumbers(number) {
-    const arabicNumbers = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
-    return number.toString().split('').map(digit => arabicNumbers[digit]).join('');
-}
-
-// دالة لتوليد تاريخ هجري عشوائي بين 1442 و 1446
-function getRandomHijriDate() {
-    const startYear = 1442;
-    const endYear = 1446;
-
-    const randomYear = Math.floor(Math.random() * (endYear - startYear + 1)) + startYear;
-    const randomMonth = Math.floor(Math.random() * 12) + 1;
-    const randomDay = Math.floor(Math.random() * 29) + 1;
-
-    // تحويل الأرقام إلى أرقام عربية
-    const arabicYear = convertToArabicNumbers(randomYear);
-    const arabicMonth = convertToArabicNumbers(randomMonth);
-    const arabicDay = convertToArabicNumbers(randomDay);
-
-    // توليد التاريخ بشكل نصي باستخدام الأرقام العربية
-    const hijriDate = `${arabicDay}-${arabicMonth}-${arabicYear}`;
-
-    return hijriDate;
-}
-
-// عند إضافة فكرة جديدة
-document.getElementById("ideaForm").addEventListener("submit", async (e) => {
+   document.getElementById("ideaForm").addEventListener("submit", async (e) => {
     e.preventDefault();
     console.log("💥 Submit clicked");
 
@@ -288,8 +261,6 @@ document.getElementById("ideaForm").addEventListener("submit", async (e) => {
     // استخدم صورة البروفايل من مجموعة اليوزر أو الصورة في Auth أو الصورة الافتراضية
     let userProfilePic = userData.profileImage || currentUser.photoURL || "images/default-profile.png";
 
-    const randomDate = getRandomHijriDate();  // توليد التاريخ العشوائي
-
     const idea = {
         title,
         description,
@@ -297,7 +268,7 @@ document.getElementById("ideaForm").addEventListener("submit", async (e) => {
         userId: currentUser.uid,
         username: userData.username || currentUser.displayName || "مستخدم",
         userProfilePic, // هنا نضيف صورة البروفايل
-        createdAt: randomDate  // هنا نضع التاريخ العشوائي
+        createdAt: serverTimestamp()
     };
 
     try {
@@ -315,5 +286,6 @@ document.getElementById("ideaForm").addEventListener("submit", async (e) => {
 });
 
 </script>
+
 </body>
 </html>
