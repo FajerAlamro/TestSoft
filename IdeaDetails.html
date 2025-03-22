@@ -166,8 +166,11 @@ color: #09315D;
         const db = getFirestore(app);
 
         // جلب معرّف الفكرة من الرابط
-        const urlParams = new URLSearchParams(window.location.search);
-const ideaId = urlParams.get('id'); // استخراج معرّف الفكرة من الرابط
+const urlParams = new URLSearchParams(window.location.search);
+const ideaId = urlParams.get('id'); // الحصول على الـ id من الرابط
+
+// استخدم الـ id للوصول إلى الفكرة وعرض التفاصيل
+
 
 if (ideaId) {
     // جلب تفاصيل الفكرة من Firestore باستخدام المعرف
