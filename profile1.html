@@ -501,7 +501,7 @@ body {
 
     <div class="profile-card">
         <div class="profile">
-            <img id="profile-img" src="images/default-avatar.png" alt="الصورة الشخصية">
+<img class="profile-img" src="images/default-avatar.png" alt="الصورة الشخصية">
 
             <h2 id="username">تحميل البيانات...</h2>
 
@@ -604,12 +604,13 @@ body {
             });
         });
     </script>
-<script type="module">
+
+	<script type="module">
     import { auth, db } from "./LogIn-Register.js";
     import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js";
     import { doc, getDoc } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
 
- 
+    // دالة لتحميل وعرض أفكار المستخدم
     function loadUserIdeas(ideas) {
         const ideasContainer = document.querySelector(".profile-ideas-container");
         ideasContainer.innerHTML = ''; 
@@ -620,25 +621,27 @@ body {
         }
 
         ideas.forEach(idea => {
-            const ideaElement = `
-                <div class="profile-idea-box">
-                    <div class="profile-idea-icons">
-                        <img src="images/delete.png" alt="حذف" class="profile-icon close-icon">
-                        <img src="images/update.png" alt="تحديث" class="profile-icon refresh-icon" onclick="window.location.href='updateIdea.html';">
-                    </div>
-                    <p class="profile-idea-title">${idea.title}</p>
-                    <p class="profile-idea-field">مجال الفكرة: ${idea.category}</p>
-                    <p class="profile-idea-date">${idea.date}</p>
+            const ideaElement = document.createElement("div");
+            ideaElement.classList.add("profile-idea-box");
+
+            ideaElement.innerHTML = `
+                <div class="profile-idea-icons">
+                    <img src="images/delete.png" alt="حذف" class="profile-icon close-icon">
+                    <img src="images/update.png" alt="تحديث" class="profile-icon refresh-icon" onclick="window.location.href='updateIdea.html';">
                 </div>
+                <p class="profile-idea-title">${idea.title}</p>
+                <p class="profile-idea-field">مجال الفكرة: ${idea.category}</p>
+                <p class="profile-idea-date">${idea.date}</p>
             `;
-            ideasContainer.innerHTML += ideaElement;
+
+            ideasContainer.appendChild(ideaElement);
         });
     }
 
- 
+    // التحقق من حالة المستخدم عند تسجيل الدخول أو الخروج
     onAuthStateChanged(auth, async (user) => {
         if (user) {
-            console.log(" المستخدم المسجّل دخوله:", user.uid);
+            console.log("المستخدم المسجّل دخوله:", user.uid);
 
             try {
                 const userRef = doc(db, "users", user.uid);
@@ -646,12 +649,12 @@ body {
 
                 if (userSnap.exists()) {
                     const userData = userSnap.data();
-                    console.log(" البيانات المسترجعة من Firestore:", userData);
+                    console.log("البيانات المسترجعة من Firestore:", userData);
 
-              
+                    // تحديث اسم المستخدم
                     document.getElementById("username").textContent = userData.username || "مستخدم مجهول";
 
-        
+                    // تحديث روابط المستخدم الاجتماعية
                     if (userData.contactInfo) {
                         document.getElementById("x-handle").textContent = userData.contactInfo.xHandle || "لم يتم الإضافة";
                         document.getElementById("linkedin-handle").textContent = userData.contactInfo.linkedinHandle || "لم يتم الإضافة";
@@ -660,7 +663,7 @@ body {
                         document.getElementById("linkedin-handle").textContent = "لم يتم الإضافة";
                     }
 
-            
+                    // تحديث صورة البروفايل
                     const profileImg = document.getElementById("profile-img");
                     if (userData.profileImage) {
                         profileImg.src = userData.profileImage;
@@ -668,23 +671,22 @@ body {
                         profileImg.src = "images/default-avatar.png"; 
                     }
 
-                
+                    // تحميل وعرض أفكار المستخدم
                     loadUserIdeas(userData.ideas || []);
                 } else {
-                    console.error(" لم يتم العثور على بيانات المستخدم.");
+                    console.error("لم يتم العثور على بيانات المستخدم.");
                     document.getElementById("username").textContent = "لم يتم العثور على البيانات.";
                 }
             } catch (error) {
-                console.error(" خطأ أثناء جلب البيانات:", error);
+                console.error("خطأ أثناء جلب البيانات:", error);
                 document.getElementById("username").textContent = "خطأ في تحميل البيانات.";
             }
         } else {
-            console.warn("⚠ لا يوجد مستخدم مسجّل دخول، سيتم توجيهه إلى صفحة تسجيل الدخول.");
+            console.warn("لا يوجد مستخدم مسجّل دخول، سيتم توجيهه إلى صفحة تسجيل الدخول.");
             window.location.href = "login.html";
         }
     });
 </script>
-
 
 
 
