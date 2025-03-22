@@ -607,7 +607,7 @@ body {
 <script type="module">
     import { auth, db } from "./LogIn-Register.js";
     import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js";
-    import { doc, getDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
+    import { doc, getDoc, collection, query, where, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
 
     // دالة لتحميل الأفكار المرتبطة باليوزر
     function loadUserIdeas(userId) {
@@ -627,7 +627,7 @@ body {
                 snapshot.docs.forEach(docSnap => {
                     const idea = docSnap.data();
                     const ideaElement = `
-                        <div class="profile-idea-box" data-id="${docSnap.id}"> <!-- أضفنا معرّف الفكرة هنا -->
+                        <div class="profile-idea-box" data-id="${docSnap.id}">
                             <div class="profile-idea-icons">
                                 <img src="images/delete.png" alt="حذف" class="profile-icon close-icon">
                                 <img src="images/update.png" alt="تحديث" class="profile-icon refresh-icon" onclick="window.location.href='https://fajeralamro.github.io/TestSoft/updateIdea.html?id=${docSnap.id}';">
@@ -639,6 +639,9 @@ body {
                     `;
                     ideasContainer.innerHTML += ideaElement;
                 });
+
+                // إضافة مستمعي الأحداث لأزرار الحذف بعد إنشاء العناصر
+                setupDeleteListeners();
             })
             .catch((error) => {
                 console.error("خطأ في جلب الأفكار:", error);
@@ -646,58 +649,107 @@ body {
             });
     }
 
-onAuthStateChanged(auth, async (user) => {
-    if (user) {
-        console.log("المستخدم المسجّل دخوله:", user.uid);
-
+    // دالة حذف الفكرة من Firestore
+    async function deleteIdeaFromFirestore(ideaId) {
         try {
-            const userRef = doc(db, "users", user.uid);
-            const userSnap = await getDoc(userRef);
-
-            if (userSnap.exists()) {
-                const userData = userSnap.data();
-                console.log("البيانات المسترجعة من Firestore:", userData);
-
-                // تحميل معلومات المستخدم
-                document.getElementById("username").textContent = userData.username || "مستخدم مجهول";
-                const profileImg = document.getElementById("profile-img");
-                if (userData.profileImage) {
-                    profileImg.src = userData.profileImage;
-                } else {
-                    profileImg.src = "images/default-avatar.png"; 
-                }
-
-                // تحديث معلومات التواصل - با استخدام contactInfo
-                if (userData.contactInfo && userData.contactInfo.linkedinHandle) {
-                    document.getElementById("linkedin-handle").textContent = userData.contactInfo.linkedinHandle;
-                    document.getElementById("linkedin-handle").href = `https://www.linkedin.com/in/${userData.contactInfo.linkedinHandle}`;
-                } else {
-                    document.getElementById("linkedin-handle").textContent = "تحميل...";
-                }
-
-                if (userData.contactInfo && userData.contactInfo.xHandle) {
-                    document.getElementById("x-handle").textContent = userData.contactInfo.xHandle;
-                    document.getElementById("x-handle").href = `https://twitter.com/${userData.contactInfo.xHandle}`;
-                } else {
-                    document.getElementById("x-handle").textContent = "تحميل...";
-                }
-
-                // تحميل الأفكار التي أضافها المستخدم
-                loadUserIdeas(user.uid);
-            } else {
-                console.error("لم يتم العثور على بيانات المستخدم.");
-                document.getElementById("username").textContent = "لم يتم العثور على البيانات.";
-            }
+            await deleteDoc(doc(db, "ideas", ideaId));
+            console.log("تم حذف الفكرة بنجاح من Firestore:", ideaId);
+            return true;
         } catch (error) {
-            console.error("خطأ أثناء جلب البيانات:", error);
-            document.getElementById("username").textContent = "خطأ في تحميل البيانات.";
+            console.error("خطأ في حذف الفكرة من Firestore:", error);
+            return false;
         }
-    } else {
-        console.warn("⚠ لا يوجد مستخدم مسجّل دخول، سيتم توجيهه إلى صفحة تسجيل الدخول.");
-        window.location.href = "login.html";
     }
-});
 
+    // إعداد مستمعي الأحداث لأزرار الحذف
+    function setupDeleteListeners() {
+        const deleteIcons = document.querySelectorAll(".close-icon");
+        const deletePopup = document.getElementById("delete-confirmation");
+        const confirmDelete = document.getElementById("confirm-delete");
+        const cancelDelete = document.getElementById("cancel-delete");
+        let currentIdeaBox = null;
+        let currentIdeaId = null;
+
+        deleteIcons.forEach(icon => {
+            icon.addEventListener("click", function() {
+                currentIdeaBox = this.closest(".profile-idea-box");
+                currentIdeaId = currentIdeaBox.getAttribute("data-id");
+                deletePopup.style.display = "block";
+            });
+        });
+
+        confirmDelete.addEventListener("click", async function() {
+            if (currentIdeaBox && currentIdeaId) {
+                // محاولة حذف الفكرة من Firestore
+                const deleted = await deleteIdeaFromFirestore(currentIdeaId);
+                
+                if (deleted) {
+                    // إزالة العنصر من واجهة المستخدم فقط إذا تم الحذف بنجاح
+                    currentIdeaBox.remove();
+                } else {
+                    // إظهار رسالة خطأ للمستخدم
+                    alert("حدث خطأ أثناء محاولة حذف الفكرة. يرجى المحاولة مرة أخرى.");
+                }
+            }
+            deletePopup.style.display = "none";
+        });
+
+        cancelDelete.addEventListener("click", function() {
+            deletePopup.style.display = "none";
+        });
+    }
+
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            console.log("المستخدم المسجّل دخوله:", user.uid);
+
+            try {
+                const userRef = doc(db, "users", user.uid);
+                const userSnap = await getDoc(userRef);
+
+                if (userSnap.exists()) {
+                    const userData = userSnap.data();
+                    console.log("البيانات المسترجعة من Firestore:", userData);
+
+                    // تحميل معلومات المستخدم
+                    document.getElementById("username").textContent = userData.username || "مستخدم مجهول";
+                    const profileImg = document.getElementById("profile-img");
+                    if (userData.profileImage) {
+                        profileImg.src = userData.profileImage;
+                    } else {
+                        profileImg.src = "images/default-avatar.png"; 
+                    }
+
+                    // تحديث معلومات التواصل - با استخدام contactInfo
+                    if (userData.contactInfo && userData.contactInfo.linkedinHandle) {
+                        document.getElementById("linkedin-handle").textContent = userData.contactInfo.linkedinHandle;
+                        document.getElementById("linkedin-handle").href = `https://www.linkedin.com/in/${userData.contactInfo.linkedinHandle}`;
+                    } else {
+                        document.getElementById("linkedin-handle").textContent = "تحميل...";
+                    }
+
+                    if (userData.contactInfo && userData.contactInfo.xHandle) {
+                        document.getElementById("x-handle").textContent = userData.contactInfo.xHandle;
+                        document.getElementById("x-handle").href = `https://twitter.com/${userData.contactInfo.xHandle}`;
+                    } else {
+                        document.getElementById("x-handle").textContent = "تحميل...";
+                    }
+
+                    // تحميل الأفكار التي أضافها المستخدم
+                    loadUserIdeas(user.uid);
+                } else {
+                    console.error("لم يتم العثور على بيانات المستخدم.");
+                    document.getElementById("username").textContent = "لم يتم العثور على البيانات.";
+                }
+            } catch (error) {
+                console.error("خطأ أثناء جلب البيانات:", error);
+                document.getElementById("username").textContent = "خطأ في تحميل البيانات.";
+            }
+        } else {
+            console.warn("⚠ لا يوجد مستخدم مسجّل دخول، سيتم توجيهه إلى صفحة تسجيل الدخول.");
+            window.location.href = "login.html";
+        }
+    });
 </script>
 </body>
 </html>
