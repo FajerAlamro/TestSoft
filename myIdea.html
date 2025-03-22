@@ -245,51 +245,48 @@
     }
 
     // عند إضافة فكرة جديدة
-    document.getElementById("ideaForm").addEventListener("submit", async (e) => {
-        e.preventDefault();
-        console.log("💥 Submit clicked");
+document.getElementById("ideaForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    console.log("💥 Submit clicked");
 
-        if (!currentUser) return alert("يجب تسجيل الدخول");
+    if (!currentUser) return alert("يجب تسجيل الدخول");
 
-        const title = document.getElementById("ideaTitle").value.trim();
-        const description = document.getElementById("ideaDes").value.trim();
-        const domain = document.getElementById("domain").value;
-        if (!title || !description || !domain) return alert("املأ جميع الحقول");
+    const title = document.getElementById("ideaTitle").value.trim();
+    const description = document.getElementById("ideaDes").value.trim();
+    const domain = document.getElementById("domain").value;
+    if (!title || !description || !domain) return alert("املأ جميع الحقول");
 
-        const userRef = doc(db, "users", currentUser.uid);
-        const userSnap = await getDoc(userRef);
-        const userData = userSnap.exists() ? userSnap.data() : {};
+    const userRef = doc(db, "users", currentUser.uid);
+    const userSnap = await getDoc(userRef);
+    const userData = userSnap.exists() ? userSnap.data() : {};
 
-        // أخذ صورة البروفايل من Firebase Auth مباشرة بدون إضافة ديفولت
-        let userProfilePic = currentUser.photoURL || userData.profileImage || "images/default-profile.png";
+    // استخدم صورة البروفايل من مجموعة اليوزر أو الصورة في Auth أو الصورة الافتراضية
+    let userProfilePic = userData.profileImage || currentUser.photoURL || "images/default-profile.png";
 
-        if (!userProfilePic) {
-            userProfilePic = "images/default-profile.png"; // التأكد من عدم إضافة `undefined`
-        }
+    const idea = {
+        title,
+        description,
+        domain,
+        userId: currentUser.uid,
+        username: userData.username || currentUser.displayName || "مستخدم",
+        userProfilePic, // هنا نضيف صورة البروفايل
+        createdAt: serverTimestamp()
+    };
 
-        const idea = {
-            title,
-            description,
-            domain,
-            userId: currentUser.uid,
-            username: userData.username || currentUser.displayName || "مستخدم",
-            userProfilePic, // فقط أخذ صورة البروفايل مباشرة
-            createdAt: serverTimestamp()
-        };
+    try {
+        const docRef = await addDoc(collection(db, "ideas"), idea);
+        console.log("✅ Idea added:", docRef.id);
+        // تحديث الفكرة في Firestore
+        await updateDoc(userRef, { [`ideas.${docRef.id}`]: { title, domain, createdAt: idea.createdAt } });
+        alert("تمت إضافة فكرتك!");
+        e.target.reset();
+        history.back();
+    } catch (err) {
+        console.error("❌ Error adding idea:", err);
+        alert("حدث خطأ أثناء الإضافة.");
+    }
+});
 
-        try {
-            const docRef = await addDoc(collection(db, "ideas"), idea);
-            console.log("✅ Idea added:", docRef.id);
-            // تحديث الفكرة في Firestore
-            await updateDoc(userRef, { [`ideas.${docRef.id}`]: { title, domain, createdAt: idea.createdAt } });
-            alert("تمت إضافة فكرتك!");
-            e.target.reset();
-            history.back();
-        } catch (err) {
-            console.error("❌ Error adding idea:", err);
-            alert("حدث خطأ أثناء الإضافة.");
-        }
-    });
 </script>
 
 </body>
