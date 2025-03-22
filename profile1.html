@@ -645,7 +645,6 @@ body {
                 ideasContainer.innerHTML = "<p style='text-align: center; color: #666;'>حدث خطأ أثناء تحميل الأفكار.</p>";
             });
     }
-
 onAuthStateChanged(auth, async (user) => {
     if (user) {
         console.log("المستخدم المسجّل دخوله:", user.uid);
@@ -658,10 +657,10 @@ onAuthStateChanged(auth, async (user) => {
                 const userData = userSnap.data();
                 console.log("البيانات المسترجعة من Firestore:", userData);
 
-                // تحميل معلومات المستخدم بشكل متزامن
+                // تحميل معلومات المستخدم
                 document.getElementById("username").textContent = userData.username || "مستخدم مجهول";
 
-                // تحميل معلومات التواصل بشكل متزامن
+                // تحميل حسابات التواصل بشكل منفصل
                 const contactInfoPromise = new Promise((resolve) => {
                     if (userData.contactInfo) {
                         document.getElementById("x-handle").textContent = userData.contactInfo.xHandle || "لم يتم الإضافة";
@@ -673,7 +672,7 @@ onAuthStateChanged(auth, async (user) => {
                     resolve();
                 });
 
-                // تحميل الصورة الشخصية بشكل متزامن
+                // تحميل صورة الملف الشخصي بشكل منفصل
                 const profileImgPromise = new Promise((resolve) => {
                     const profileImg = document.getElementById("profile-img");
                     if (userData.profileImage) {
@@ -684,13 +683,18 @@ onAuthStateChanged(auth, async (user) => {
                     resolve();
                 });
 
-                // تحميل الأفكار التي أضافها المستخدم
+                // تحميل الأفكار إذا كانت موجودة
                 const ideasPromise = new Promise((resolve) => {
-                    loadUserIdeas(userData.ideas || []);
+                    if (userData.ideas && userData.ideas.length > 0) {
+                        loadUserIdeas(userData.ideas);
+                    } else {
+                        const ideasContainer = document.querySelector(".profile-ideas-container");
+                        ideasContainer.innerHTML = "<p style='text-align: center; color: #666;'>لا توجد أفكار بعد.</p>";
+                    }
                     resolve();
                 });
 
-                // استخدام Promise.all لضمان تنفيذ جميع العمليات بشكل متزامن
+                // استخدام Promise.all لضمان تحميل البيانات معًا
                 await Promise.all([contactInfoPromise, profileImgPromise, ideasPromise]);
 
             } else {
@@ -706,7 +710,6 @@ onAuthStateChanged(auth, async (user) => {
         window.location.href = "login.html";
     }
 });
-
 
 </script>
 
