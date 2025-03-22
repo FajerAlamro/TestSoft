@@ -651,9 +651,18 @@ onAuthStateChanged(auth, async (user) => {
         console.log("المستخدم المسجّل دخوله:", user.uid);
 
         try {
+            // Start both data fetching operations
             const userRef = doc(db, "users", user.uid);
-            const userSnap = await getDoc(userRef);
+            const userPromise = getDoc(userRef);
+            
+            // Create a promise for the ideas query
+            const ideasQuery = query(collection(db, "ideas"), where("userId", "==", user.uid));
+            const ideasPromise = getDocs(ideasQuery);
+            
+            // Wait for both operations to complete
+            const [userSnap, ideasSnapshot] = await Promise.all([userPromise, ideasPromise]);
 
+            // Process user data
             if (userSnap.exists()) {
                 const userData = userSnap.data();
                 console.log("البيانات المسترجعة من Firestore:", userData);
@@ -670,27 +679,53 @@ onAuthStateChanged(auth, async (user) => {
                 // تحديث معلومات التواصل
                 if (userData.linkedin) {
                     document.getElementById("linkedin-handle").textContent = userData.linkedin;
-                    document.getElementById("linkedin-handle").href = `https://www.linkedin.com/in/${userData.linkedin}`;  // التأكد من ربطه بالرابط
+                    document.getElementById("linkedin-handle").href = `https://www.linkedin.com/in/${userData.linkedin}`;
                 } else {
                     document.getElementById("linkedin-handle").textContent = "تحميل...";
                 }
 
                 if (userData.xHandle) {
                     document.getElementById("x-handle").textContent = userData.xHandle;
-                    document.getElementById("x-handle").href = `https://twitter.com/${userData.xHandle}`;  // تأكد من ربطه بحساب تويتر
+                    document.getElementById("x-handle").href = `https://twitter.com/${userData.xHandle}`;
                 } else {
                     document.getElementById("x-handle").textContent = "تحميل...";
                 }
-
-                // تحميل الأفكار التي أضافها المستخدم
-                loadUserIdeas(user.uid); // تم تعديلها لتأخذ معرف المستخدم
             } else {
                 console.error("لم يتم العثور على بيانات المستخدم.");
                 document.getElementById("username").textContent = "لم يتم العثور على البيانات.";
             }
+            
+            // Process ideas data
+            const ideasContainer = document.querySelector(".profile-ideas-container");
+            ideasContainer.innerHTML = '';
+            
+            if (ideasSnapshot.empty) {
+                ideasContainer.innerHTML = "<p style='text-align: center; color: #666;'>لا توجد أفكار بعد.</p>";
+            } else {
+                ideasSnapshot.docs.forEach(docSnap => {
+                    const idea = docSnap.data();
+                    const ideaElement = `
+                        <div class="profile-idea-box" data-id="${docSnap.id}">
+                            <div class="profile-idea-icons">
+                                <img src="images/delete.png" alt="حذف" class="profile-icon close-icon">
+                                <img src="images/update.png" alt="تحديث" class="profile-icon refresh-icon" onclick="window.location.href='https://fajeralamro.github.io/TestSoft/updateIdea.html?id=${docSnap.id}';">
+                            </div>
+                            <p class="profile-idea-title">${idea.title}</p>
+                            <p class="profile-idea-field">مجال الفكرة: ${idea.domain}</p>
+                            <p class="profile-idea-date">${new Date(idea.createdAt.seconds * 1000).toLocaleDateString('ar-SA')}</p>
+                        </div>
+                    `;
+                    ideasContainer.innerHTML += ideaElement;
+                });
+            }
+            
         } catch (error) {
             console.error("خطأ أثناء جلب البيانات:", error);
             document.getElementById("username").textContent = "خطأ في تحميل البيانات.";
+            
+            // Also show error for ideas
+            const ideasContainer = document.querySelector(".profile-ideas-container");
+            ideasContainer.innerHTML = "<p style='text-align: center; color: #666;'>حدث خطأ أثناء تحميل الأفكار.</p>";
         }
     } else {
         console.warn("⚠ لا يوجد مستخدم مسجّل دخول، سيتم توجيهه إلى صفحة تسجيل الدخول.");
