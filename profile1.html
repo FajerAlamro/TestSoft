@@ -607,38 +607,48 @@ body {
 <script type="module">
     import { auth, db } from "./LogIn-Register.js";
     import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js";
-    import { doc, getDoc } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
+    import { doc, getDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
 
- 
-    function loadUserIdeas(ideas) {
+    // دالة لتحميل الأفكار المرتبطة باليوزر
+    function loadUserIdeas(userId) {
         const ideasContainer = document.querySelector(".profile-ideas-container");
         ideasContainer.innerHTML = ''; 
 
-        if (!Array.isArray(ideas) || ideas.length === 0) {
-            ideasContainer.innerHTML = "<p style='text-align: center; color: #666;'>لا توجد أفكار بعد.</p>";
-            return;
-        }
+        // استعلام لجلب الأفكار التي تخص هذا اليوزر
+        const ideasQuery = query(collection(db, "ideas"), where("userId", "==", userId));
 
-        ideas.forEach(idea => {
-            const ideaElement = `
-                <div class="profile-idea-box">
-                    <div class="profile-idea-icons">
-                        <img src="images/delete.png" alt="حذف" class="profile-icon close-icon">
-                        <img src="images/update.png" alt="تحديث" class="profile-icon refresh-icon" onclick="window.location.href='updateIdea.html';">
-                    </div>
-                    <p class="profile-idea-title">${idea.title}</p>
-                    <p class="profile-idea-field">مجال الفكرة: ${idea.category}</p>
-                    <p class="profile-idea-date">${idea.date}</p>
-                </div>
-            `;
-            ideasContainer.innerHTML += ideaElement;
-        });
+        getDocs(ideasQuery)
+            .then((snapshot) => {
+                if (snapshot.empty) {
+                    ideasContainer.innerHTML = "<p style='text-align: center; color: #666;'>لا توجد أفكار بعد.</p>";
+                    return;
+                }
+
+                snapshot.docs.forEach(docSnap => {
+                    const idea = docSnap.data();
+                    const ideaElement = `
+                        <div class="profile-idea-box">
+                            <div class="profile-idea-icons">
+                                <img src="images/delete.png" alt="حذف" class="profile-icon close-icon">
+                                <img src="images/update.png" alt="تحديث" class="profile-icon refresh-icon" onclick="window.location.href='updateIdea.html';">
+                            </div>
+                            <p class="profile-idea-title">${idea.title}</p>
+                            <p class="profile-idea-field">مجال الفكرة: ${idea.domain}</p>
+                            <p class="profile-idea-date">${new Date(idea.createdAt.seconds * 1000).toLocaleDateString('ar-SA')}</p>
+                        </div>
+                    `;
+                    ideasContainer.innerHTML += ideaElement;
+                });
+            })
+            .catch((error) => {
+                console.error("خطأ في جلب الأفكار:", error);
+                ideasContainer.innerHTML = "<p style='text-align: center; color: #666;'>حدث خطأ أثناء تحميل الأفكار.</p>";
+            });
     }
 
- 
     onAuthStateChanged(auth, async (user) => {
         if (user) {
-            console.log(" المستخدم المسجّل دخوله:", user.uid);
+            console.log("المستخدم المسجّل دخوله:", user.uid);
 
             try {
                 const userRef = doc(db, "users", user.uid);
@@ -646,21 +656,11 @@ body {
 
                 if (userSnap.exists()) {
                     const userData = userSnap.data();
-                    console.log(" البيانات المسترجعة من Firestore:", userData);
+                    console.log("البيانات المسترجعة من Firestore:", userData);
 
-              
+                    // تحميل معلومات المستخدم
                     document.getElementById("username").textContent = userData.username || "مستخدم مجهول";
 
-        
-                    if (userData.contactInfo) {
-                        document.getElementById("x-handle").textContent = userData.contactInfo.xHandle || "لم يتم الإضافة";
-                        document.getElementById("linkedin-handle").textContent = userData.contactInfo.linkedinHandle || "لم يتم الإضافة";
-                    } else {
-                        document.getElementById("x-handle").textContent = "لم يتم الإضافة";
-                        document.getElementById("linkedin-handle").textContent = "لم يتم الإضافة";
-                    }
-
-            
                     const profileImg = document.getElementById("profile-img");
                     if (userData.profileImage) {
                         profileImg.src = userData.profileImage;
@@ -668,14 +668,14 @@ body {
                         profileImg.src = "images/default-avatar.png"; 
                     }
 
-                
-                    loadUserIdeas(userData.ideas || []);
+                    // تحميل الأفكار التي أضافها المستخدم
+                    loadUserIdeas(user.uid); // تم تعديلها لتأخذ معرف المستخدم
                 } else {
-                    console.error(" لم يتم العثور على بيانات المستخدم.");
+                    console.error("لم يتم العثور على بيانات المستخدم.");
                     document.getElementById("username").textContent = "لم يتم العثور على البيانات.";
                 }
             } catch (error) {
-                console.error(" خطأ أثناء جلب البيانات:", error);
+                console.error("خطأ أثناء جلب البيانات:", error);
                 document.getElementById("username").textContent = "خطأ في تحميل البيانات.";
             }
         } else {
@@ -684,8 +684,6 @@ body {
         }
     });
 </script>
-
-
 
 
 </body>
