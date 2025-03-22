@@ -148,33 +148,49 @@ color: #09315D;
         <button class="investment-btn">طلب استثمار</button>
     </div>
 
-    <script type="module">
+<script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
         import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
-        const db = getFirestore();
+        const firebaseConfig = {
+            apiKey: "AIzaSyC68KD9M_rGGOoyfQaW925LT8ipoj9jE44",
+            authDomain: "wasl-523b4.firebaseapp.com",
+            projectId: "wasl-523b4",
+            storageBucket: "wasl-523b4.appspot.com",
+            messagingSenderId: "410509570015",
+            appId: "1:410509570015:web:4c9a86048b3e8be0bd1e6a"
+        };
+
+        // تهيئة Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // جلب معرّف الفكرة من الرابط
         const urlParams = new URLSearchParams(window.location.search);
-        const ideaId = urlParams.get('id');
+const ideaId = urlParams.get('id'); // استخراج معرّف الفكرة من الرابط
 
-        if (ideaId) {
-            const ideaRef = doc(db, "ideas", ideaId);
-            getDoc(ideaRef).then(ideaSnap => {
-                if (ideaSnap.exists()) {
-                    const ideaData = ideaSnap.data();
-
-                    // تحديث النصوص في الصفحة
-                    document.getElementById('idea-title').textContent = `عنوان الفكرة: ${ideaData.title}`;
-                    document.getElementById('idea-description').textContent = `وصف الفكرة: ${ideaData.description}`;
-                    document.getElementById('idea-date').textContent = `تاريخ النشر: ${new Date(ideaData.createdAt.toDate()).toLocaleDateString('ar-SA')}`;
-                    document.getElementById('idea-domain').textContent = `مجال الفكرة: ${ideaData.domain}`;
-                } else {
-                    console.log("❌ لا توجد فكرة بهذا المعرف");
-                }
-            }).catch(error => {
-                console.error("❌ خطأ في تحميل الفكرة:", error);
-            });
+if (ideaId) {
+    // جلب تفاصيل الفكرة من Firestore باستخدام المعرف
+    const ideaRef = doc(db, "ideas", ideaId);
+    getDoc(ideaRef).then(ideaSnap => {
+        if (ideaSnap.exists()) {
+            const ideaData = ideaSnap.data();
+            // عرض البيانات مثل العنوان والوصف ومجال الفكرة
+            document.querySelector(".idea-title").textContent = ideaData.title;
+            document.querySelector(".idea-description").textContent = ideaData.description;
+            document.querySelector(".idea-domain").textContent = ideaData.domain;
+            document.querySelector(".idea-date").textContent = new Date(ideaData.createdAt.toDate()).toLocaleDateString('ar-SA');
+            // يمكنك إضافة المزيد من التفاصيل هنا
         } else {
-            console.log("❌ معرّف الفكرة غير موجود في الرابط");
+            console.error("❌ لا توجد فكرة بهذا المعرف");
         }
+    }).catch(error => {
+        console.error("❌ حدث خطأ أثناء جلب تفاصيل الفكرة:", error);
+    });
+} else {
+    console.log("❌ معرّف الفكرة غير موجود في الرابط");
+}
+
     </script>
 </body>
 </html>
