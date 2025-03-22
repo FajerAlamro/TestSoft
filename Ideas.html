@@ -463,11 +463,11 @@ onSnapshot(ideasQuery, snapshot => {
     const idea = docSnap.data();
     const photoSrc = idea.userProfilePic?.startsWith("http")
       ? idea.userProfilePic
-      : /${idea.userProfilePic.replace(/^\/?/, "")};
+      : `${idea.userProfilePic.replace(/^\/?/, "")}`;
 
     const card = document.createElement("div");
     card.className = "idea-card";
-    card.innerHTML = 
+    card.innerHTML = `
       <div class="profile">
         <a href="account1.html?id=${idea.userId}" class="profile-link">
           <img src="${photoSrc}" alt="${idea.username}" 
@@ -480,8 +480,8 @@ onSnapshot(ideasQuery, snapshot => {
         <p>مجال الفكرة: ${idea.domain}</p>
         <p>${new Date(idea.createdAt.toDate()).toLocaleDateString('ar-SA')}</p>
       </div>
-    ;
-    card.addEventListener("click", () => window.location.href = ideaDetails.html?id=${docSnap.id});
+    `;
+    card.addEventListener("click", () => window.location.href = `ideaDetails.html?id=${docSnap.id}`);
     ideasContainer.appendChild(card);
   });
 });
