@@ -272,10 +272,15 @@
     };
 
     try {
+        // إضافة الفكرة في مجموعة "ideas"
         const docRef = await addDoc(collection(db, "ideas"), idea);
         console.log("✅ Idea added:", docRef.id);
-        // تحديث الفكرة في Firestore
-        await updateDoc(userRef, { [`ideas.${docRef.id}`]: { title, domain, createdAt: idea.createdAt } });
+
+        // تحديث مجموعة "users" لإضافة الفكرة ضمن بيانات المستخدم
+        await updateDoc(userRef, {
+            [`ideas.${docRef.id}`]: { title, domain, createdAt: idea.createdAt }
+        });
+
         alert("تمت إضافة فكرتك!");
         e.target.reset();
         history.back();
