@@ -209,8 +209,8 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
     import { getFirestore, collection, addDoc, doc, updateDoc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
-    import moment from "https://cdn.jsdelivr.net/npm/moment-hijri@2.1.0+moment.min.js";  // إضافة مكتبة moment-hijri
-
+    import moment from "https://cdn.jsdelivr.net/npm/moment-hijri@2.1.0+moment.min.js";
+    
     const firebaseConfig = {
         apiKey: "AIzaSyC68KD9M_rGGOoyfQaW925LT8ipoj9jE44",
         authDomain: "wasl-523b4.firebaseapp.com",
@@ -242,11 +242,10 @@
         profileImageElement.src = profilePic ? profilePic : "images/default-avatar.png";
     }
 
-  function getRandomHijriDate() {
+    function getRandomHijriDate() {
         const startYear = 1442;
         const endYear = 1446;
 
-        // توليد سنة، شهر، ويوم عشوائي ضمن الفترة المحددة
         const randomYear = Math.floor(Math.random() * (endYear - startYear + 1)) + startYear;
         const randomMonth = Math.floor(Math.random() * 12) + 1;
         const randomDay = Math.floor(Math.random() * 29) + 1;
@@ -254,7 +253,7 @@
         // توليد التاريخ الهجري بالعربية باستخدام مكتبة moment
         const hijriDate = moment(`${randomYear}-${randomMonth}-${randomDay}`, "iYYYY-iMM-iDD").format('iYYYY/iMM/iDD');
 
-        return hijriDate; // التاريخ الهجري بصيغة عربية
+        return hijriDate;
     }
 
 
