@@ -647,9 +647,9 @@ body {
             });
     }
 
-    onAuthStateChanged(auth, async (user) => {
+     onAuthStateChanged(auth, async (user) => {
         if (user) {
-            console.log("المستخدم المسجّل دخوله:", user.uid);
+            console.log(" المستخدم المسجّل دخوله:", user.uid);
 
             try {
                 const userRef = doc(db, "users", user.uid);
@@ -657,11 +657,21 @@ body {
 
                 if (userSnap.exists()) {
                     const userData = userSnap.data();
-                    console.log("البيانات المسترجعة من Firestore:", userData);
+                    console.log(" البيانات المسترجعة من Firestore:", userData);
 
-                    // تحميل معلومات المستخدم
+              
                     document.getElementById("username").textContent = userData.username || "مستخدم مجهول";
 
+        
+                    if (userData.contactInfo) {
+                        document.getElementById("x-handle").textContent = userData.contactInfo.xHandle || "لم يتم الإضافة";
+                        document.getElementById("linkedin-handle").textContent = userData.contactInfo.linkedinHandle || "لم يتم الإضافة";
+                    } else {
+                        document.getElementById("x-handle").textContent = "لم يتم الإضافة";
+                        document.getElementById("linkedin-handle").textContent = "لم يتم الإضافة";
+                    }
+
+            
                     const profileImg = document.getElementById("profile-img");
                     if (userData.profileImage) {
                         profileImg.src = userData.profileImage;
@@ -669,14 +679,14 @@ body {
                         profileImg.src = "images/default-avatar.png"; 
                     }
 
-                    // تحميل الأفكار التي أضافها المستخدم
-                    loadUserIdeas(user.uid); // تم تعديلها لتأخذ معرف المستخدم
+                
+                    loadUserIdeas(userData.ideas || []);
                 } else {
-                    console.error("لم يتم العثور على بيانات المستخدم.");
+                    console.error(" لم يتم العثور على بيانات المستخدم.");
                     document.getElementById("username").textContent = "لم يتم العثور على البيانات.";
                 }
             } catch (error) {
-                console.error("خطأ أثناء جلب البيانات:", error);
+                console.error(" خطأ أثناء جلب البيانات:", error);
                 document.getElementById("username").textContent = "خطأ في تحميل البيانات.";
             }
         } else {
