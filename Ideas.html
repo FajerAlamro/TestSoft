@@ -463,7 +463,7 @@
             const idea = docSnap.data();
             
             // تأكد من الحقل الصحيح
-            let photoSrc = idea.profileImage || "images/default-avatar.png"; // استخدام الحقل الصحيح
+            let photoSrc = idea.userProfilePic || "images/default-avatar.png"; // استخدام الحقل الصحيح
             if (photoSrc && !photoSrc.startsWith("http")) {
                 // إذا لم تكن الصورة تبدأ بـ http، عالج الرابط بشكل صحيح
                 photoSrc = `/${photoSrc.replace(/^\/?/, "")}`; // تأكد من عدم وجود / في بداية الرابط
@@ -490,7 +490,6 @@
         });
     });
 </script>
-
 
 </body>
 </html>
