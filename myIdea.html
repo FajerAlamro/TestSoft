@@ -207,7 +207,7 @@
     </main>
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
-    import { getFirestore, collection, addDoc, doc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, doc, updateDoc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
 
     const firebaseConfig = {
@@ -248,10 +248,12 @@
         const startYear = 1442;
         const endYear = 1446;
 
+        // توليد سنة، شهر، ويوم عشوائي ضمن الفترة المحددة
         const randomYear = Math.floor(Math.random() * (endYear - startYear + 1)) + startYear;
         const randomMonth = Math.floor(Math.random() * 12) + 1;
         const randomDay = Math.floor(Math.random() * 29) + 1;
 
+        // قم بتنسيق التاريخ بشكل هجري
         const hijriDate = new Date(`20${randomYear}-0${randomMonth}-0${randomDay}T00:00:00Z`); // تحويل إلى تاريخ ميلادي عشوائي
 
         return hijriDate;
@@ -302,6 +304,7 @@
         }
     });
 </script>
+
 
 </body>
 </html>
