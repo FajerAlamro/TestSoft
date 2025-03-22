@@ -668,19 +668,20 @@ onAuthStateChanged(auth, async (user) => {
                 }
 
                 // تحديث معلومات التواصل
-                if (userData.linkedin) {
-                    document.getElementById("linkedin-handle").textContent = userData.linkedin;
-                    document.getElementById("linkedin-handle").href = `https://www.linkedin.com/in/${userData.linkedin}`;  // التأكد من ربطه بالرابط
-                } else {
-                    document.getElementById("linkedin-handle").textContent = "تحميل...";
-                }
+if (userData.linkedinHandle) {
+    document.getElementById("linkedin-handle").textContent = userData.linkedinHandle;
+    document.getElementById("linkedin-handle").href = `https://www.linkedin.com/in/${userData.linkedinHandle}`;
+} else {
+    document.getElementById("linkedin-handle").textContent = "تحميل...";
+}
 
-                if (userData.xHandle) {
-                    document.getElementById("x-handle").textContent = userData.xHandle;
-                    document.getElementById("x-handle").href = `https://twitter.com/${userData.xHandle}`;  // تأكد من ربطه بحساب تويتر
-                } else {
-                    document.getElementById("x-handle").textContent = "تحميل...";
-                }
+if (userData.xHandle) {
+    document.getElementById("x-handle").textContent = userData.xHandle;
+    document.getElementById("x-handle").href = `https://twitter.com/${userData.xHandle}`;
+} else {
+    document.getElementById("x-handle").textContent = "تحميل...";
+}
+
 
                 // تحميل الأفكار التي أضافها المستخدم
                 loadUserIdeas(user.uid); // تم تعديلها لتأخذ معرف المستخدم
