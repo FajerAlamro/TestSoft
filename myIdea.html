@@ -206,67 +206,68 @@
         </form>
     </main>
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
-import { getFirestore, collection, addDoc, doc, updateDoc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+    import { getFirestore, collection, addDoc, doc, updateDoc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyC68KD9M_rGGOoyfQaW925LT8ipoj9jE44",
-  authDomain: "wasl-523b4.firebaseapp.com",
-  projectId: "wasl-523b4",
-  storageBucket: "wasl-523b4.appspot.com",
-  messagingSenderId: "410509570015",
-  appId: "1:410509570015:web:4c9a86048b3e8be0bd1e6a",
-  measurementId: "G-DD60XW5EVT"
-};
+    const firebaseConfig = {
+        apiKey: "AIzaSyC68KD9M_rGGOoyfQaW925LT8ipoj9jE44",
+        authDomain: "wasl-523b4.firebaseapp.com",
+        projectId: "wasl-523b4",
+        storageBucket: "wasl-523b4.appspot.com",
+        messagingSenderId: "410509570015",
+        appId: "1:410509570015:web:4c9a86048b3e8be0bd1e6a",
+        measurementId: "G-DD60XW5EVT"
+    };
 
-initializeApp(firebaseConfig);
-const db = getFirestore();
-const auth = getAuth();
+    initializeApp(firebaseConfig);
+    const db = getFirestore();
+    const auth = getAuth();
 
-let currentUser = null;
-onAuthStateChanged(auth, user => currentUser = user);
+    let currentUser = null;
+    onAuthStateChanged(auth, user => currentUser = user);
 
-document.getElementById("ideaForm").addEventListener("submit", async e => {
-  e.preventDefault();
-  console.log("💥 Submit clicked");
+    document.getElementById("ideaForm").addEventListener("submit", async e => {
+        e.preventDefault();
+        console.log("💥 Submit clicked");
 
-  if (!currentUser) return alert("يجب تسجيل الدخول");
+        if (!currentUser) return alert("يجب تسجيل الدخول");
 
-  const title = document.getElementById("ideaTitle").value.trim();
-  const description = document.getElementById("ideaDes").value.trim();
-  const domain = document.getElementById("domain").value;
-  if (!title || !description || !domain) return alert("املأ جميع الحقول");
+        const title = document.getElementById("ideaTitle").value.trim();
+        const description = document.getElementById("ideaDes").value.trim();
+        const domain = document.getElementById("domain").value;
+        if (!title || !description || !domain) return alert("املأ جميع الحقول");
 
-  const userRef = doc(db, "users", currentUser.uid);
-  const userSnap = await getDoc(userRef);
-  const userData = userSnap.exists() ? userSnap.data() : {};
+        const userRef = doc(db, "users", currentUser.uid);
+        const userSnap = await getDoc(userRef);
+        const userData = userSnap.exists() ? userSnap.data() : {};
 
-  // إذا للمستخدم صورة في Firestore أو Auth استخدمها، وإلا استخدم الصورة المحلية الافتراضية
-  const userProfilePic = userData.profilePicture || currentUser.photoURL || "images/default-profile.png";
+        // إذا للمستخدم صورة في Firestore أو Auth استخدمها، وإلا استخدم الصورة المحلية الافتراضية
+        const userProfilePic = userData.profilePicture || currentUser.photoURL || "images/default-profile.png";
 
-  const idea = {
-    title,
-    description,
-    domain,
-    userId: currentUser.uid,
-    username: userData.username || currentUser.displayName || "مستخدم",
-    userProfilePic,
-    createdAt: serverTimestamp()
-  };
+        const idea = {
+            title,
+            description,
+            domain,
+            userId: currentUser.uid,
+            username: userData.username || currentUser.displayName || "مستخدم",
+            userProfilePic,
+            createdAt: serverTimestamp()
+        };
 
-  try {
-    const docRef = await addDoc(collection(db, "ideas"), idea);
-    console.log("✅ Idea added:", docRef.id);
-    await updateDoc(userRef, { [ideas.${docRef.id}]: { title, domain, createdAt: idea.createdAt } });
-    alert("تمت إضافة فكرتك!");
-    e.target.reset();
-    history.back();
-  } catch(err) {
-    console.error("❌ Error adding idea:", err);
-    alert("حدث خطأ أثناء الإضافة.");
-  }
-});
+        try {
+            const docRef = await addDoc(collection(db, "ideas"), idea);
+            console.log("✅ Idea added:", docRef.id);
+            // تعديل هذا السطر ليكون بالشكل الصحيح
+            await updateDoc(userRef, { [`ideas.${docRef.id}`]: { title, domain, createdAt: idea.createdAt } });
+            alert("تمت إضافة فكرتك!");
+            e.target.reset();
+            history.back();
+        } catch(err) {
+            console.error("❌ Error adding idea:", err);
+            alert("حدث خطأ أثناء الإضافة.");
+        }
+    });
 </script>
 
 
