@@ -461,9 +461,9 @@
 
         snapshot.docs.forEach(docSnap => {
             const idea = docSnap.data();
-            let photoSrc = idea.userProfilePic || "images/default-avatar.png"; // استخدام الصورة الافتراضية إذا كانت الصورة غير موجودة
-
-            // تحقق من أن الصورة هي رابط صحيح (تبدأ بـ http:// أو https://)
+            
+            // تأكد من الحقل الصحيح
+            let photoSrc = idea.profileImage || "images/default-avatar.png"; // استخدام الحقل الصحيح
             if (photoSrc && !photoSrc.startsWith("http")) {
                 // إذا لم تكن الصورة تبدأ بـ http، عالج الرابط بشكل صحيح
                 photoSrc = `/${photoSrc.replace(/^\/?/, "")}`; // تأكد من عدم وجود / في بداية الرابط
@@ -490,8 +490,6 @@
         });
     });
 </script>
-
-
 
 </body>
 </html>
