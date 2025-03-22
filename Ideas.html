@@ -31,7 +31,6 @@
         }
         .logo img {
             width: 80px; 
-   
         }
         .humburger {
             display: flex;
@@ -105,7 +104,7 @@
             text-align: right;
             margin-right: 5px;
             margin-top: 5vh;
-           padding-right: 15px;
+            padding-right: 15px;
         }
         .idea-card {
             background: #ECECEC;
@@ -163,31 +162,6 @@
             font-size: 24px;
             cursor: pointer;
         }
-        .search-bar {
-            display: flex;
-            align-items: center;
-            background: white;
-            border-radius: 12px;
-            padding: 8px;
-            width: 85vw;
-            margin: auto;
-            box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .search-bar input {
-            border: none;
-            outline: none;
-            background: transparent;
-            flex: 1;
-            font-size: 16px;
-        }
-
-        .filter-icon {
-            width: 24px; 
-            height: 24px;
-            cursor: pointer;
-            margin-left: 10px; 
-        }
         #closeIcon {
             display: none; 
             font-size: 28px;
@@ -203,145 +177,27 @@
         #closeIcon.visible {
             display: block;
         }
-        .IdeaLink {
-            text-decoration: none !important;
-        }
-        .modal {
-            display: none; 
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 280px;
-            background: rgba(0, 0, 0, 0.8); 
-            color: white;
-            border-radius: 10px;
-            text-align: center;
-            padding: 15px;
-            z-index: 1000;
-            box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.3);
-        }
-
-        .modal-content {
-            background: #2a2d34;
-            padding: 15px;
-            border-radius: 10px;
-        }
-
-        .modal-content h2 {
-            font-size: 14px;
-            font-weight: bold;
-            color: #ffffff;
-            margin-bottom: 5px;
-        }
-
-        .modal-content p {
-            font-size: 12px;
-            color: #ccc;
-            margin-bottom: 15px;
-        }
-
-        .modal-buttons {
-            display: flex;
-            justify-content: space-between;
-            gap: 10px;
-        }
-
-        .modal-buttons button {
-            flex: 1;
-            padding: 8px 0;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 12px;
-        }
-
-        .modal-buttons button:last-child {
-            background: #0c2340;
-            color: white;
-            font-weight: bold;
-        }
-
-        .modal-buttons button:first-child {
-            background: transparent;
-            border: 1px solid #ccc;
-            color: #ccc;
-        }
-        
-        /* أنماط نموذج إضافة فكرة */
-        .input-container {
-            position: relative;
-            margin-bottom: 20px;
-            width: 100%;
-        }
-        
-        .input-container input, 
-        .input-container textarea,
-        .input-container select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #09315D;
-            border-radius: 8px;
-            font-size: 16px;
-            font-family: 'Baloo Bhaijaan 2', sans-serif;
-        }
-        
-        .input-container label {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            transition: all 0.3s ease;
-            pointer-events: none;
-            color: #09315D;
-        }
-        
-        .input-container input:focus ~ label,
-        .input-container input:not(:placeholder-shown) ~ label,
-        .input-container textarea:focus ~ label,
-        .input-container textarea:not(:placeholder-shown) ~ label {
-            top: -10px;
-            right: 10px;
-            background: white;
-            padding: 0 5px;
-            font-size: 12px;
-        }
-        
-        .selectList {
-            padding: 10px;
-            border: 1px solid #09315D;
-            border-radius: 8px;
-            font-size: 16px;
-            color: #09315D;
-            width: 100%;
-            margin-bottom: 20px;
-        }
-        
-        #ideaForm button {
-            padding: 10px 20px;
-            background-color: #09315D;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-right: 10px;
-            font-family: 'Baloo Bhaijaan 2', sans-serif;
-        }
-        
-        #ideaForm button[type="reset"] {
-            background-color: transparent;
-            color: #09315D;
-            border: 1px solid #09315D;
-        }
-        
-        .no-ideas-message {
-            text-align: center;
-            margin: 50px auto;
-            font-size: 18px;
-            color: #09315D;
-        }
     </style>
 
     <script>
+        function toggleMenu() {
+            var menu = document.getElementById("menuOverlay");
+            var closeIcon = document.getElementById("closeIcon");
+            var hamburgerIcon = document.getElementById("hamburgerIcon");
+
+            // إذا كانت القائمة نشطة، أزل الفئة 'active' وأعرض الأيقونة الهامبرغر
+            if (menu.classList.contains("active")) {
+                menu.classList.remove("active");
+                hamburgerIcon.classList.remove("hidden");
+                closeIcon.classList.remove("visible");
+            } else {
+                // إذا كانت غير نشطة، أضف الفئة 'active' لإظهار القائمة
+                menu.classList.add("active");
+                hamburgerIcon.classList.add("hidden");
+                closeIcon.classList.add("visible");
+            }
+        }
+
         function openLogoutModal() {
             document.getElementById("logoutModal").style.display = "block";
         }
@@ -378,7 +234,7 @@
         <a href="FavouritePage.html">المفضلة</a>
         <a href="#" onclick="openLogoutModal()">تسجيل الخروج</a>
     </div>
-    
+
     <div class="search-bar">
         <input type="text" id="searchInput" placeholder="ابحث">
         <a href="FilterIdea.html"><img src="images/filter-icon.png" alt="فلتر" class="filter-icon"></a>
@@ -406,6 +262,7 @@
             </div>
         </div>
     </div>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
 import { getFirestore, collection, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
@@ -467,26 +324,8 @@ onSnapshot(ideasQuery, snapshot => {
     ideasContainer.appendChild(card);
   });
 });
-
-
-      function toggleMenu() {
-            var menu = document.getElementById("menuOverlay");
-            var hamburgerIcon = document.querySelector("#hamburgerIcon");
-
-            var closeIcon = document.getElementById("closeIcon");
-    
-            if (menu.classList.contains("active")) {
-                menu.classList.remove("active");
-                hamburgerIcon.classList.remove("hidden");
-                closeIcon.classList.remove("visible");
-            } else {
-                menu.classList.add("active");
-                hamburgerIcon.classList.add("hidden");
-                closeIcon.classList.add("visible");
-            }
-        }
 </script>
-
 
 </body>
 </html>
+
