@@ -647,53 +647,58 @@ body {
             });
     }
 
-     onAuthStateChanged(auth, async (user) => {
-        if (user) {
-            console.log(" المستخدم المسجّل دخوله:", user.uid);
+onAuthStateChanged(auth, async (user) => {
+    if (user) {
+        console.log("المستخدم المسجّل دخوله:", user.uid);
 
-            try {
-                const userRef = doc(db, "users", user.uid);
-                const userSnap = await getDoc(userRef);
+        try {
+            const userRef = doc(db, "users", user.uid);
+            const userSnap = await getDoc(userRef);
 
-                if (userSnap.exists()) {
-                    const userData = userSnap.data();
-                    console.log(" البيانات المسترجعة من Firestore:", userData);
+            if (userSnap.exists()) {
+                const userData = userSnap.data();
+                console.log("البيانات المسترجعة من Firestore:", userData);
 
-              
-                    document.getElementById("username").textContent = userData.username || "مستخدم مجهول";
-
-        
-                    if (userData.contactInfo) {
-                        document.getElementById("x-handle").textContent = userData.contactInfo.xHandle || "لم يتم الإضافة";
-                        document.getElementById("linkedin-handle").textContent = userData.contactInfo.linkedinHandle || "لم يتم الإضافة";
-                    } else {
-                        document.getElementById("x-handle").textContent = "لم يتم الإضافة";
-                        document.getElementById("linkedin-handle").textContent = "لم يتم الإضافة";
-                    }
-
-            
-                    const profileImg = document.getElementById("profile-img");
-                    if (userData.profileImage) {
-                        profileImg.src = userData.profileImage;
-                    } else {
-                        profileImg.src = "images/default-avatar.png"; 
-                    }
-
-                
-                    loadUserIdeas(userData.ideas || []);
+                // تحميل معلومات المستخدم
+                document.getElementById("username").textContent = userData.username || "مستخدم مجهول";
+                const profileImg = document.getElementById("profile-img");
+                if (userData.profileImage) {
+                    profileImg.src = userData.profileImage;
                 } else {
-                    console.error(" لم يتم العثور على بيانات المستخدم.");
-                    document.getElementById("username").textContent = "لم يتم العثور على البيانات.";
+                    profileImg.src = "images/default-avatar.png"; 
                 }
-            } catch (error) {
-                console.error(" خطأ أثناء جلب البيانات:", error);
-                document.getElementById("username").textContent = "خطأ في تحميل البيانات.";
+
+                // تحديث معلومات التواصل
+                if (userData.linkedin) {
+                    document.getElementById("linkedin-handle").textContent = userData.linkedin;
+                    document.getElementById("linkedin-handle").href = `https://www.linkedin.com/in/${userData.linkedin}`;  // التأكد من ربطه بالرابط
+                } else {
+                    document.getElementById("linkedin-handle").textContent = "تحميل...";
+                }
+
+                if (userData.xHandle) {
+                    document.getElementById("x-handle").textContent = userData.xHandle;
+                    document.getElementById("x-handle").href = `https://twitter.com/${userData.xHandle}`;  // تأكد من ربطه بحساب تويتر
+                } else {
+                    document.getElementById("x-handle").textContent = "تحميل...";
+                }
+
+                // تحميل الأفكار التي أضافها المستخدم
+                loadUserIdeas(user.uid); // تم تعديلها لتأخذ معرف المستخدم
+            } else {
+                console.error("لم يتم العثور على بيانات المستخدم.");
+                document.getElementById("username").textContent = "لم يتم العثور على البيانات.";
             }
-        } else {
-            console.warn("⚠ لا يوجد مستخدم مسجّل دخول، سيتم توجيهه إلى صفحة تسجيل الدخول.");
-            window.location.href = "login.html";
+        } catch (error) {
+            console.error("خطأ أثناء جلب البيانات:", error);
+            document.getElementById("username").textContent = "خطأ في تحميل البيانات.";
         }
-    });
+    } else {
+        console.warn("⚠ لا يوجد مستخدم مسجّل دخول، سيتم توجيهه إلى صفحة تسجيل الدخول.");
+        window.location.href = "login.html";
+    }
+});
+
 </script>
 
 
