@@ -205,7 +205,8 @@
             <button type="reset">إعادة تعيين</button>
         </form>
     </main>
-<script type="module">
+
+    <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
     import { getFirestore, collection, addDoc, doc, updateDoc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
@@ -260,7 +261,7 @@
         const userData = userSnap.exists() ? userSnap.data() : {};
 
         // أخذ صورة البروفايل من Firebase Auth مباشرة بدون إضافة ديفولت
-        let userProfilePic = currentUser.photoURL || userData.profilePicture || "images/default-profile.png";
+        let userProfilePic = currentUser.photoURL || userData.profileImage || "images/default-profile.png";
 
         if (!userProfilePic) {
             userProfilePic = "images/default-profile.png"; // التأكد من عدم إضافة `undefined`
