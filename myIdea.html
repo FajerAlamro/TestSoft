@@ -209,6 +209,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
     import { getFirestore, collection, addDoc, doc, updateDoc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
+    import moment from "https://cdn.jsdelivr.net/npm/moment-hijri@2.1.0+moment.min.js";  // إضافة مكتبة moment-hijri
 
     const firebaseConfig = {
         apiKey: "AIzaSyC68KD9M_rGGOoyfQaW925LT8ipoj9jE44",
@@ -235,15 +236,13 @@
 
     // دالة لاسترجاع صورة بروفايل المستخدم
     async function getUserProfilePicture() {
-        // إذا كانت صورة البروفايل موجودة في Firebase Auth
         const profilePic = currentUser.photoURL || null;
 
-        // في حال كانت الصورة فارغة، استخدم الصورة الافتراضية
         const profileImageElement = document.getElementById("profile-img");
         profileImageElement.src = profilePic ? profilePic : "images/default-avatar.png";
     }
 
-    // دالة لتوليد تاريخ هجري عشوائي بين 1442 و 1446
+    // دالة لتوليد تاريخ هجري عشوائي بين 1442 و 1446 بصيغة عربية
     function getRandomHijriDate() {
         const startYear = 1442;
         const endYear = 1446;
@@ -253,10 +252,10 @@
         const randomMonth = Math.floor(Math.random() * 12) + 1;
         const randomDay = Math.floor(Math.random() * 29) + 1;
 
-        // قم بتنسيق التاريخ بشكل هجري
-        const hijriDate = new Date(`20${randomYear}-0${randomMonth}-0${randomDay}T00:00:00Z`); // تحويل إلى تاريخ ميلادي عشوائي
+        // توليد التاريخ الهجري بالعربية باستخدام مكتبة moment
+        const hijriDate = moment(`${randomYear}-${randomMonth}-${randomDay}`, "iYYYY-iMM-iDD").format('iYYYY/iMM/iDD');
 
-        return hijriDate;
+        return hijriDate; // التاريخ الهجري بصيغة عربية
     }
 
     // عند إضافة فكرة جديدة
@@ -287,7 +286,7 @@
             userId: currentUser.uid,
             username: userData.username || currentUser.displayName || "مستخدم",
             userProfilePic, // هنا نضيف صورة البروفايل
-            createdAt: randomDate  // هنا نضع التاريخ العشوائي
+            createdAt: randomDate  // هنا نضع التاريخ العشوائي كـ نص هجري عربي
         };
 
         try {
@@ -304,7 +303,6 @@
         }
     });
 </script>
-
 
 </body>
 </html>
