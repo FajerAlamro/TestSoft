@@ -238,8 +238,9 @@
         // إذا كانت صورة البروفايل موجودة في Firebase Auth
         const profilePic = currentUser.photoURL || null;
 
-        // عند إضافة الفكرة، استخدم صورة البروفايل فقط
-        document.getElementById("profile-img").src = profilePic ? profilePic : "images/default-avatar.png";
+        // في حال كانت الصورة فارغة، استخدم الصورة الافتراضية
+        const profileImageElement = document.getElementById("profile-img");
+        profileImageElement.src = profilePic ? profilePic : "images/default-avatar.png";
     }
 
     // عند إضافة فكرة جديدة
@@ -259,7 +260,11 @@
         const userData = userSnap.exists() ? userSnap.data() : {};
 
         // أخذ صورة البروفايل من Firebase Auth مباشرة بدون إضافة ديفولت
-        const userProfilePic = currentUser.photoURL || userData.profilePicture; // فقط إذا كانت موجودة في Firebase Auth أو Firestore
+        let userProfilePic = currentUser.photoURL || userData.profilePicture || "images/default-profile.png";
+
+        if (!userProfilePic) {
+            userProfilePic = "images/default-profile.png"; // التأكد من عدم إضافة `undefined`
+        }
 
         const idea = {
             title,
