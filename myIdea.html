@@ -242,8 +242,7 @@
         profileImageElement.src = profilePic ? profilePic : "images/default-avatar.png";
     }
 
-    // دالة لتوليد تاريخ هجري عشوائي بين 1442 و 1446 بصيغة عربية
-    function getRandomHijriDate() {
+  function getRandomHijriDate() {
         const startYear = 1442;
         const endYear = 1446;
 
@@ -257,6 +256,7 @@
 
         return hijriDate; // التاريخ الهجري بصيغة عربية
     }
+
 
     // عند إضافة فكرة جديدة
     document.getElementById("ideaForm").addEventListener("submit", async (e) => {
