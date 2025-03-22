@@ -467,6 +467,24 @@ onSnapshot(ideasQuery, snapshot => {
     ideasContainer.appendChild(card);
   });
 });
+
+
+      function toggleMenu() {
+            var menu = document.getElementById("menuOverlay");
+            var hamburgerIcon = document.querySelector("#hamburgerIcon");
+
+            var closeIcon = document.getElementById("closeIcon");
+    
+            if (menu.classList.contains("active")) {
+                menu.classList.remove("active");
+                hamburgerIcon.classList.remove("hidden");
+                closeIcon.classList.remove("visible");
+            } else {
+                menu.classList.add("active");
+                hamburgerIcon.classList.add("hidden");
+                closeIcon.classList.add("visible");
+            }
+        }
 </script>
 
 
