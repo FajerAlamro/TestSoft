@@ -123,31 +123,58 @@ color: #09315D;
     </style>
 </head>
 <body>
-   
     <div class="container">
         <div class="header">
-            <a href="Ideas.html" >
-            <img src="images/Logo.png" alt="الشعار" class="logo">
+            <a href="Ideas.html">
+                <img src="images/Logo.png" alt="الشعار" class="logo">
             </a>
-            <a href="Ideas.html" >  <span class="material-symbols-outlined">arrow_back</span><br></a>
-
-           
+            <a href="Ideas.html">
+                <span class="material-symbols-outlined">arrow_back</span>
+            </a>
         </div>
-        
+
         <h2>تفاصيل الفكرة</h2>
 
         <div class="fav-icon-container">
             <img src="images/favIcon.png" alt="المفضلة" class="fav-icon">
         </div>
 
-        <div class="input-box">عنوان الفكرة: أجهزة استشعار لمراقبة الجودة</div>
-        <div class="textarea-box">وصف الفكرة: تستخدم أجهزة الاستشعار الحديثة لمراقبة جودة المنتجات في الوقت الفعلي، مما يساعد في الكشف  عن العيوب .</div>
-        <div class="input-box">تاريخ النشر:١٤٤٤/٨/٢٩
-        </div>
-        <div class="input-box">مجال الفكرة: الصناعة</div>
+        <!-- هذه هي الأماكن التي سيتم تحديثها عبر JavaScript -->
+        <div class="input-box" id="idea-title">عنوان الفكرة: ...</div>
+        <div class="textarea-box" id="idea-description">وصف الفكرة: ...</div>
+        <div class="input-box" id="idea-date">تاريخ النشر: ...</div>
+        <div class="input-box" id="idea-domain">مجال الفكرة: ...</div>
 
         <button class="investment-btn">طلب استثمار</button>
     </div>
 
+    <script type="module">
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+
+        const db = getFirestore();
+        const urlParams = new URLSearchParams(window.location.search);
+        const ideaId = urlParams.get('id');
+
+        if (ideaId) {
+            const ideaRef = doc(db, "ideas", ideaId);
+            getDoc(ideaRef).then(ideaSnap => {
+                if (ideaSnap.exists()) {
+                    const ideaData = ideaSnap.data();
+
+                    // تحديث النصوص في الصفحة
+                    document.getElementById('idea-title').textContent = `عنوان الفكرة: ${ideaData.title}`;
+                    document.getElementById('idea-description').textContent = `وصف الفكرة: ${ideaData.description}`;
+                    document.getElementById('idea-date').textContent = `تاريخ النشر: ${new Date(ideaData.createdAt.toDate()).toLocaleDateString('ar-SA')}`;
+                    document.getElementById('idea-domain').textContent = `مجال الفكرة: ${ideaData.domain}`;
+                } else {
+                    console.log("❌ لا توجد فكرة بهذا المعرف");
+                }
+            }).catch(error => {
+                console.error("❌ خطأ في تحميل الفكرة:", error);
+            });
+        } else {
+            console.log("❌ معرّف الفكرة غير موجود في الرابط");
+        }
+    </script>
 </body>
 </html>
