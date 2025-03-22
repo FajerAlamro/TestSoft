@@ -205,67 +205,86 @@
             <button type="reset">إعادة تعيين</button>
         </form>
     </main>
-
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
-import { getFirestore, collection, addDoc, doc, updateDoc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+    import { getFirestore, collection, addDoc, doc, updateDoc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyC68KD9M_rGGOoyfQaW925LT8ipoj9jE44",
-  authDomain: "wasl-523b4.firebaseapp.com",
-  projectId: "wasl-523b4",
-  storageBucket: "wasl-523b4.appspot.com",
-  messagingSenderId: "410509570015",
-  appId: "1:410509570015:web:4c9a86048b3e8be0bd1e6a",
-  measurementId: "G-DD60XW5EVT"
-};
+    const firebaseConfig = {
+        apiKey: "AIzaSyC68KD9M_rGGOoyfQaW925LT8ipoj9jE44",
+        authDomain: "wasl-523b4.firebaseapp.com",
+        projectId: "wasl-523b4",
+        storageBucket: "wasl-523b4.appspot.com",
+        messagingSenderId: "410509570015",
+        appId: "1:410509570015:web:4c9a86048b3e8be0bd1e6a",
+        measurementId: "G-DD60XW5EVT"
+    };
 
-initializeApp(firebaseConfig);
-const db = getFirestore();
-const auth = getAuth();
+    initializeApp(firebaseConfig);
+    const db = getFirestore();
+    const auth = getAuth();
 
-let currentUser = null;
-onAuthStateChanged(auth, user => currentUser = user);
+    let currentUser = null;
+    onAuthStateChanged(auth, (user) => {
+        currentUser = user;
+        if (currentUser) {
+            // إذا كان المستخدم مسجلاً، استرجع صورته
+            getUserProfilePicture();
+        }
+    });
 
-document.getElementById("ideaForm").addEventListener("submit", async e => {
-  e.preventDefault();
-  console.log("💥 Submit clicked");
+    // دالة لاسترجاع صورة بروفايل المستخدم
+    async function getUserProfilePicture() {
+        // إذا كانت صورة البروفايل موجودة في Firebase Auth
+        const profilePic = currentUser.photoURL || null;
 
-  if (!currentUser) return alert("يجب تسجيل الدخول");
+        // عند إضافة الفكرة، استخدم صورة البروفايل فقط
+        document.getElementById("profile-img").src = profilePic ? profilePic : "images/default-avatar.png";
+    }
 
-  const title = document.getElementById("ideaTitle").value.trim();
-  const description = document.getElementById("ideaDes").value.trim();
-  const domain = document.getElementById("domain").value;
-  if (!title || !description || !domain) return alert("املأ جميع الحقول");
+    // عند إضافة فكرة جديدة
+    document.getElementById("ideaForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        console.log("💥 Submit clicked");
 
-  const userRef = doc(db, "users", currentUser.uid);
-  const userSnap = await getDoc(userRef);
-  const userData = userSnap.exists() ? userSnap.data() : {};
+        if (!currentUser) return alert("يجب تسجيل الدخول");
 
-  // إذا للمستخدم صورة في Firestore أو Auth استخدمها، وإلا استخدم الصورة المحلية الافتراضية
-  const userProfilePic = userData.profilePicture || currentUser.photoURL || "images/default-profile.png";
+        const title = document.getElementById("ideaTitle").value.trim();
+        const description = document.getElementById("ideaDes").value.trim();
+        const domain = document.getElementById("domain").value;
+        if (!title || !description || !domain) return alert("املأ جميع الحقول");
 
-  const idea = {
-    title,
-    description,
-    domain,
-    userId: currentUser.uid,
-    username: userData.username || currentUser.displayName || "مستخدم",
-    userProfilePic,
-    createdAt: serverTimestamp()
-  };
+        const userRef = doc(db, "users", currentUser.uid);
+        const userSnap = await getDoc(userRef);
+        const userData = userSnap.exists() ? userSnap.data() : {};
 
-  try {
-    const docRef = await addDoc(collection(db, "ideas"), idea);
-    console.log("✅ Idea added:", docRef.id);
-    await updateDoc(userRef, { [`ideas.${docRef.id}`]: { title, domain, createdAt: idea.createdAt } });
-    alert("تمت إضافة فكرتك!");
-    e.target.reset();
-    history.back();
-  } catch(err) {
-    console.error("❌ Error adding idea:", err);
-    alert("حدث خطأ أثناء الإضافة.");
-  }
+        // أخذ صورة البروفايل من Firebase Auth مباشرة بدون إضافة ديفولت
+        const userProfilePic = currentUser.photoURL || userData.profilePicture; // فقط إذا كانت موجودة في Firebase Auth أو Firestore
+
+        const idea = {
+            title,
+            description,
+            domain,
+            userId: currentUser.uid,
+            username: userData.username || currentUser.displayName || "مستخدم",
+            userProfilePic, // فقط أخذ صورة البروفايل مباشرة
+            createdAt: serverTimestamp()
+        };
+
+        try {
+            const docRef = await addDoc(collection(db, "ideas"), idea);
+            console.log("✅ Idea added:", docRef.id);
+            // تحديث الفكرة في Firestore
+            await updateDoc(userRef, { [`ideas.${docRef.id}`]: { title, domain, createdAt: idea.createdAt } });
+            alert("تمت إضافة فكرتك!");
+            e.target.reset();
+            history.back();
+        } catch (err) {
+            console.error("❌ Error adding idea:", err);
+            alert("حدث خطأ أثناء الإضافة.");
+        }
+    });
+</script>
+
 </body>
 </html>
