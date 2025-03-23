@@ -263,7 +263,12 @@
         let userProfilePic = userData.profileImage || currentUser.photoURL || "images/default-profile.png";
         
 const now = new Date();
-const hijriDate = now.toLocaleDateString('ar-SA'); // التاريخ الهجري
+const hijriDate = now.toLocaleDateString('ar-SA', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+});
+
 
 
 const idea = {
@@ -273,10 +278,8 @@ const idea = {
     userId: currentUser.uid,
     username: userData.username || currentUser.displayName || "مستخدم",
     userProfilePic,
-    createdAt: serverTimestamp(),  // تاريخ حقيقي من السيرفر
-    hijriDate                      // تاريخ هجري كنص
+    createdAt: hijriDate // << تاريخ هجري فقط
 };
-
 
         try {
             const docRef = await addDoc(collection(db, "ideas"), idea);
