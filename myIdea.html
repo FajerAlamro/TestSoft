@@ -261,6 +261,9 @@
 
         // استخدم صورة البروفايل من مجموعة اليوزر أو الصورة في Auth أو الصورة الافتراضية
         let userProfilePic = userData.profileImage || currentUser.photoURL || "images/default-profile.png";
+        
+const now = new Date();
+const hijriDate = now.toLocaleDateString('ar-SA'); // نحوله مباشرة إلى هجري
 
         const idea = {
             title,
@@ -269,7 +272,7 @@
             userId: currentUser.uid,
             username: userData.username || currentUser.displayName || "مستخدم",
             userProfilePic, // هنا نضيف صورة البروفايل
-            createdAt: serverTimestamp()
+            createdAt: hijriDate 
         };
 
         try {
