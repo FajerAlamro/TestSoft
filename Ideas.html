@@ -480,7 +480,7 @@ onSnapshot(ideasQuery, snapshot => {
             <div class="idea-content">
                 <p><strong>${idea.title}</strong></p>
                 <p>مجال الفكرة: ${idea.domain}</p>
-                <p>${new Date(idea.createdAt.toDate()).toLocaleDateString('ar-SA')}</p>
+                <p>${idea.createdAt}</p>
             </div>
         `;
         
