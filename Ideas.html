@@ -449,7 +449,7 @@
         if (!user) window.location.href = "login.html";
     });
 
-    const ideasQuery = query(collection(db, "ideas"), orderBy("createdAt", "desc"));
+const ideasQuery = query(collection(db, "ideas"));
 
 onSnapshot(ideasQuery, snapshot => {
     ideasContainer.innerHTML = "";
