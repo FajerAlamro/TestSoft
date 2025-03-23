@@ -263,17 +263,20 @@
         let userProfilePic = userData.profileImage || currentUser.photoURL || "images/default-profile.png";
         
 const now = new Date();
-const hijriDate = now.toLocaleDateString('ar-SA'); // نحوله مباشرة إلى هجري
+const hijriDate = now.toLocaleDateString('ar-SA'); // التاريخ الهجري
 
-        const idea = {
-            title,
-            description,
-            domain,
-            userId: currentUser.uid,
-            username: userData.username || currentUser.displayName || "مستخدم",
-            userProfilePic, // هنا نضيف صورة البروفايل
-            createdAt: hijriDate 
-        };
+
+const idea = {
+    title,
+    description,
+    domain,
+    userId: currentUser.uid,
+    username: userData.username || currentUser.displayName || "مستخدم",
+    userProfilePic,
+    createdAt: serverTimestamp(),  // تاريخ حقيقي من السيرفر
+    hijriDate                      // تاريخ هجري كنص
+};
+
 
         try {
             const docRef = await addDoc(collection(db, "ideas"), idea);
