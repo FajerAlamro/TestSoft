@@ -179,7 +179,7 @@ color: #09315D;
                 document.querySelector("#idea-title").textContent = ideaData.title;
                 document.querySelector("#idea-description").textContent = ideaData.description;
                 document.querySelector("#idea-domain").textContent = ideaData.domain;
-                document.querySelector("#idea-date").textContent = new Date(ideaData.createdAt.toDate()).toLocaleDateString('ar-SA');
+                document.querySelector("#idea-date").textContent = idea.createdAtHijri;
             } else {
                 console.error("❌ لا توجد فكرة بهذا المعرف");
             }
